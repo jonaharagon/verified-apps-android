@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -176,16 +175,17 @@ fun VerifyAppScreen(
                     FilledTonalButton(
                         onClick = { showMoreInfoAboutInternalDatabaseStatusDialog = true },
                     ) {
-                        Text(
-                            internalDatabaseInfo.internalDatabaseStatus.simpleInternalDatabaseStatus.name
-                                .replace('_', ' '),
-                            style = MaterialTheme.typography.titleLargeEmphasized,
+                        DatabaseStatusIcon(
+                            status = internalDatabaseInfo.internalDatabaseStatus,
+                            modifier = Modifier.size(24.dp),
                         )
                         Spacer(Modifier.width(8.dp))
-                        Icon(
-                            Icons.Default.Info,
-                            "More info about internal database status",
-                            tint = internalDatabaseInfo.internalDatabaseStatus.simpleInternalDatabaseStatus.color,
+                        Text(
+                            text = stringResource(
+                                internalDatabaseInfo.internalDatabaseStatus.labelRes(),
+                            ),
+                            style = MaterialTheme.typography.titleLargeEmphasized,
+                            color = internalDatabaseInfo.internalDatabaseStatus.statusColor(),
                         )
                     }
                     val databaseStatus = internalDatabaseInfo.internalDatabaseStatus
@@ -276,14 +276,20 @@ fun VerifyAppScreen(
                 }
             },
             title = {
-                Column(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    DatabaseStatusIcon(
+                        status = internalDatabaseInfo.internalDatabaseStatus,
+                        modifier = Modifier.size(28.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        internalDatabaseInfo.internalDatabaseStatus.name,
+                        text = stringResource(internalDatabaseInfo.internalDatabaseStatus.labelRes()),
                         style = MaterialTheme.typography.headlineSmall,
-                        color = internalDatabaseInfo.internalDatabaseStatus.simpleInternalDatabaseStatus.color,
+                        color = internalDatabaseInfo.internalDatabaseStatus.statusColor(),
                     )
                 }
             },

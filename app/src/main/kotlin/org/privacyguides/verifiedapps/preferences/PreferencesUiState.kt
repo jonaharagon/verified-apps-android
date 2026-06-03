@@ -37,6 +37,12 @@ data class PreferencesUiState(
         mutableStateOf(false)
     ),
 
+    /** Use Material You dynamic color from the system wallpaper (Android 12+). */
+    val dynamicColor: Pair<Preferences.Key<Boolean>, MutableState<Boolean>> = Pair(
+        booleanPreferencesKey("DYNAMIC_COLOR"),
+        mutableStateOf(true),
+    ),
+
     /** Pitch black background. */
     val pitchBlackBackground: Pair<Preferences.Key<Boolean>, MutableState<Boolean>> = Pair(
         (booleanPreferencesKey("PITCH_BLACK_BACKGROUND")),

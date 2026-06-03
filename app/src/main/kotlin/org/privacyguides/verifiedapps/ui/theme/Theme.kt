@@ -55,15 +55,16 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun AppVerifierTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
     preferencesViewModel: PreferencesViewModel,
     content: @Composable () -> Unit,
 ) {
     val settingsUiState by preferencesViewModel.uiState.collectAsState()
     val pitchBlackBackground = settingsUiState.pitchBlackBackground.second.value && darkTheme
+    val useDynamicColor = settingsUiState.dynamicColor.second.value &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        useDynamicColor -> {
             val context = LocalContext.current
             if (darkTheme) {
                 if (pitchBlackBackground) {

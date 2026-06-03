@@ -15,6 +15,9 @@
     <string name="credits">Credits</string>
     <string name="credits_setting_name">Credits</string>
     <string name="credits_setting_description">View open source licenses of code that Verified Apps uses in app</string>
+    <string name="dynamic_color_setting_name">Dynamic color</string>
+    <string name="dynamic_color_setting_description">Use your wallpaper colors for the app theme (Android 12 and above)</string>
+    <string name="dynamic_color_setting_unavailable_description">Dynamic color requires Android 12 or newer. The app uses the default teal theme.</string>
     <string name="pitch_black_background_setting_name">Pitch black background</string>
     <string name="pitch_black_background_setting_description">Replaces background with pitch black background when dark theme is on</string>
     <string name="about">About</string>

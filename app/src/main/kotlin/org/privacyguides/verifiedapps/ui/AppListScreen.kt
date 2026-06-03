@@ -70,9 +70,6 @@ import org.privacyguides.verifiedapps.data.Hashes
 import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
 import org.privacyguides.verifiedapps.data.InternalDatabaseStatus
 import org.privacyguides.verifiedapps.data.VerificationInfo
-import org.privacyguides.verifiedapps.ui.theme.MismatchRed
-import org.privacyguides.verifiedapps.ui.theme.UnknownGray
-import org.privacyguides.verifiedapps.ui.theme.VerifiedGreen
 
 private enum class AppListTab {
     User,
@@ -381,11 +378,7 @@ fun AppItem(
     ) -> Unit,
     internalDatabaseInfo: InternalDatabaseInfo,
 ) {
-    val statusColor = when (internalDatabaseInfo.internalDatabaseStatus) {
-        InternalDatabaseStatus.MATCH -> VerifiedGreen
-        InternalDatabaseStatus.NOMATCH -> MismatchRed
-        InternalDatabaseStatus.NOT_FOUND -> UnknownGray
-    }
+    val status = internalDatabaseInfo.internalDatabaseStatus
 
     Card(
         onClick = {
@@ -425,29 +418,7 @@ fun AppItem(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            when (internalDatabaseInfo.internalDatabaseStatus) {
-                InternalDatabaseStatus.NOT_FOUND -> {
-                    Icon(
-                        Icons.Default.HelpOutline,
-                        stringResource(R.string.app_list_status_unknown),
-                        tint = statusColor,
-                    )
-                }
-                InternalDatabaseStatus.MATCH -> {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        stringResource(R.string.app_list_status_verified),
-                        tint = statusColor,
-                    )
-                }
-                InternalDatabaseStatus.NOMATCH -> {
-                    Icon(
-                        Icons.Default.Error,
-                        stringResource(R.string.app_list_status_mismatch),
-                        tint = statusColor,
-                    )
-                }
-            }
+            DatabaseStatusIcon(status = status)
         }
     }
 }

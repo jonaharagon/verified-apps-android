@@ -3,7 +3,6 @@ package org.privacyguides.verifiedapps.data
 import android.graphics.drawable.Drawable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Color
 import org.privacyguides.verifiedapps.Source
 
 data class VerifyAppUiState(
@@ -27,30 +26,18 @@ class InternalDatabaseInfo(
     val sources: List<Source>
 )
 
-enum class InternalDatabaseStatus(
-    val info: String,
-    val simpleInternalDatabaseStatus: SimpleInternalDatabaseStatus,
-) {
+enum class InternalDatabaseStatus(val info: String) {
     NOT_FOUND(
         "This app was not found in the internal database. You can open a pre-filled GitHub submission " +
-                "using the button below.",
-        SimpleInternalDatabaseStatus.NOT_FOUND,
+            "using the button below.",
     ),
     MATCH(
         "This app's verification info matches an entry in the internal database. You don't need to verify normally.",
-        SimpleInternalDatabaseStatus.SUCCESS,
     ),
     NOMATCH(
         "This app was found in the internal database, but its hash did NOT match. This app may be " +
-                "non-genuine.",
-        SimpleInternalDatabaseStatus.FAILURE,
+            "non-genuine.",
     ),
-}
-
-enum class SimpleInternalDatabaseStatus(val color: Color) {
-    NOT_FOUND(Color.Gray),
-    SUCCESS(Color.Green),
-    FAILURE(Color.Red)
 }
 
 data class Hashes(

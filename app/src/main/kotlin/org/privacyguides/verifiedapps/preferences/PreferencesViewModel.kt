@@ -71,6 +71,13 @@ class PreferencesViewModel(private val dataStore: DataStore<Preferences>) : View
                                 .showSystemApps.second.value
                         )
                     ),
+                    dynamicColor = Pair(
+                        uiState.value.dynamicColor.first,
+                        mutableStateOf(
+                            settings[uiState.value.dynamicColor.first] ?: uiState.value
+                                .dynamicColor.second.value
+                        ),
+                    ),
                     pitchBlackBackground = Pair(
                         uiState.value.pitchBlackBackground.first,
                         mutableStateOf(

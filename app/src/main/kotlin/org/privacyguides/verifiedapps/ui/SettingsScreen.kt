@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,6 +48,7 @@ fun SettingsScreen(
     val localUriHandler = LocalUriHandler.current
     val preferencesUiState by preferencesViewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val dynamicColorAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     Column(
         modifier = Modifier
@@ -55,6 +57,24 @@ fun SettingsScreen(
     ) {
         Column {
             SettingsCategoryText(category = stringResource(id = R.string.theme))
+            SettingsItem(
+                name = stringResource(id = R.string.dynamic_color_setting_name),
+                description = stringResource(
+                    id = if (dynamicColorAvailable) {
+                        R.string.dynamic_color_setting_description
+                    } else {
+                        R.string.dynamic_color_setting_unavailable_description
+                    },
+                ),
+                hasSwitch = true,
+                enabled = dynamicColorAvailable,
+                checked = preferencesUiState.dynamicColor.second.value,
+                onCheckedChange = {
+                    coroutineScope.launch {
+                        preferencesViewModel.setPreference(preferencesUiState.dynamicColor.first, it)
+                    }
+                },
+            )
             SettingsItem(
                 name = stringResource(id = R.string.pitch_black_background_setting_name),
                 description = stringResource(id = R.string.pitch_black_background_setting_description),
@@ -211,6 +231,7 @@ fun SettingsItem(
     description: String,
     hasSwitch: Boolean = false,
     hasIcon: Boolean = false,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit = {},
     checked: Boolean = false,
     onClickIconSetting: () -> Unit = {},
@@ -218,10 +239,14 @@ fun SettingsItem(
 ) {
     ListItem(
         modifier = when {
-            hasIcon -> Modifier.clickable(onClick = { onClickIconSetting() })
+            hasIcon -> Modifier.clickable(
+                enabled = enabled,
+                onClick = { onClickIconSetting() },
+            )
             hasSwitch -> Modifier.toggleable(
                 value = checked,
-                onValueChange = { onCheckedChange(it) }
+                enabled = enabled,
+                onValueChange = { onCheckedChange(it) },
             )
 
             else -> Modifier
@@ -239,6 +264,7 @@ fun SettingsItem(
                 hasSwitch -> Switch(
                     checked = checked,
                     onCheckedChange = null,
+                    enabled = enabled,
                 )
             }
         }
