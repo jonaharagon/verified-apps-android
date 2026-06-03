@@ -19,12 +19,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -33,8 +37,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -45,11 +50,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,8 +64,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
@@ -121,6 +128,15 @@ fun AppListScreen(
     val sortOrder = AppListSort.entries[sortOrdinal]
     val statusFilter = AppListFilter.entries[filterOrdinal]
     var sortMenuExpanded by remember { mutableStateOf(false) }
+    var searchFieldVisible by rememberSaveable { mutableStateOf(false) }
+    val searchFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(searchFieldVisible) {
+        onSearchActiveChange(searchFieldVisible)
+        if (searchFieldVisible) {
+            searchFocusRequester.requestFocus()
+        }
+    }
 
     LaunchedEffect(showSystemApps) {
         if (!showSystemApps) {
@@ -173,41 +189,89 @@ fun AppListScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onQueryChange,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text(stringResource(R.string.app_list_search_hint)) },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                },
-                singleLine = true,
-                shape = MaterialTheme.shapes.large,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        onSearch(searchQuery)
-                        onSearchActiveChange(false)
-                    },
-                ),
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .height(SearchBarDefaults.InputFieldHeight)
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = stringResource(R.string.app_list_results_count, visibleEntries.size),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.CenterStart),
-                )
-                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                if (searchFieldVisible) {
+                    IconButton(onClick = { searchFieldVisible = false }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.app_list_search_close),
+                        )
+                    }
+                } else {
+                    IconButton(onClick = { searchFieldVisible = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = stringResource(R.string.app_list_search),
+                            tint = if (searchQuery.isNotEmpty()) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
+                }
+                AnimatedContent(
+                    targetState = searchFieldVisible,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    transitionSpec = {
+                        fadeIn() togetherWith fadeOut()
+                    },
+                    label = "app_list_header_search",
+                ) { searchActive ->
+                    if (searchActive) {
+                        SearchBarDefaults.InputField(
+                            query = searchQuery,
+                            onQueryChange = onQueryChange,
+                            onSearch = { query ->
+                                onSearch(query)
+                                searchFieldVisible = false
+                            },
+                            expanded = true,
+                            onExpandedChange = { expanded ->
+                                if (!expanded) {
+                                    searchFieldVisible = false
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(SearchBarDefaults.InputFieldHeight)
+                                .focusRequester(searchFocusRequester),
+                            placeholder = { Text(stringResource(R.string.app_list_search_hint)) },
+                            leadingIcon = null,
+                            trailingIcon = null,
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.app_list),
+                                style = MaterialTheme.typography.titleLargeEmphasized,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+                Box {
                     IconButton(onClick = { sortMenuExpanded = true }) {
-                        Icon(Icons.Default.Sort, stringResource(R.string.app_list_sort))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Sort,
+                            contentDescription = stringResource(R.string.app_list_sort),
+                        )
                     }
                     DropdownMenu(
                         expanded = sortMenuExpanded,
@@ -234,24 +298,35 @@ fun AppListScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(
-                    Icons.Default.FilterList,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                Text(
+                    text = stringResource(R.string.app_list_results_count, visibleEntries.size),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                AppListFilter.entries.forEach { filter ->
-                    FilterChip(
-                        selected = statusFilter == filter,
-                        onClick = { filterOrdinal = filter.ordinal },
-                        label = { Text(appListFilterLabel(filter)) },
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .horizontalScroll(rememberScrollState()),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        Icons.Default.FilterList,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    AppListFilter.entries.forEach { filter ->
+                        FilterChip(
+                            selected = statusFilter == filter,
+                            onClick = { filterOrdinal = filter.ordinal },
+                            label = { Text(appListFilterLabel(filter)) },
+                        )
+                    }
                 }
             }
 
