@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FilterList
@@ -46,6 +47,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -124,9 +126,8 @@ fun AppListScreen(
 
     var selectedTab by rememberSaveable { mutableIntStateOf(AppListTab.User.ordinal) }
     var sortOrdinal by rememberSaveable { mutableIntStateOf(AppListSort.NAME_ASC.ordinal) }
-    var filterOrdinal by rememberSaveable { mutableIntStateOf(AppListFilter.ALL.ordinal) }
+    var statusFilterMask by rememberSaveable { mutableIntStateOf(defaultStatusFilterMask()) }
     val sortOrder = AppListSort.entries[sortOrdinal]
-    val statusFilter = AppListFilter.entries[filterOrdinal]
     var sortMenuExpanded by remember { mutableStateOf(false) }
     var searchFieldVisible by rememberSaveable { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
@@ -169,9 +170,9 @@ fun AppListScreen(
         )
     }
 
-    val visibleEntries = remember(allEntries, searchQuery, statusFilter, sortOrder) {
+    val visibleEntries = remember(allEntries, searchQuery, statusFilterMask, sortOrder) {
         allEntries
-            .filter { it.matchesFilter(statusFilter) && it.matchesSearch(searchQuery) }
+            .filter { it.matchesStatusFilters(statusFilterMask) && it.matchesSearch(searchQuery) }
             .sortedWith { a, b -> compareAppListEntries(a, b, sortOrder) }
     }
 
@@ -298,6 +299,7 @@ fun AppListScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -307,26 +309,20 @@ fun AppListScreen(
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .horizontalScroll(rememberScrollState()),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        Icons.Default.FilterList,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                Icon(
+                    Icons.Default.FilterList,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                AppListFilter.entries.forEach { filter ->
+                    StatusFilterChip(
+                        filter = filter,
+                        selected = isStatusFilterSelected(statusFilterMask, filter),
+                        onClick = {
+                            statusFilterMask = toggleStatusFilter(statusFilterMask, filter)
+                        },
                     )
-                    AppListFilter.entries.forEach { filter ->
-                        FilterChip(
-                            selected = statusFilter == filter,
-                            onClick = { filterOrdinal = filter.ordinal },
-                            label = { Text(appListFilterLabel(filter)) },
-                        )
-                    }
                 }
             }
 
@@ -395,6 +391,28 @@ fun AppListScreen(
 }
 
 @Composable
+private fun StatusFilterChip(
+    filter: AppListFilter,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(appListFilterLabel(filter)) },
+        leadingIcon = {
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(FilterChipDefaults.IconSize),
+                )
+            }
+        },
+    )
+}
+
+@Composable
 private fun appListSortLabel(sort: AppListSort): String = when (sort) {
     AppListSort.NAME_ASC -> stringResource(R.string.app_list_sort_name_asc)
     AppListSort.NAME_DESC -> stringResource(R.string.app_list_sort_name_desc)
@@ -404,7 +422,6 @@ private fun appListSortLabel(sort: AppListSort): String = when (sort) {
 
 @Composable
 private fun appListFilterLabel(filter: AppListFilter): String = when (filter) {
-    AppListFilter.ALL -> stringResource(R.string.app_list_filter_all)
     AppListFilter.VERIFIED -> stringResource(R.string.app_list_filter_verified)
     AppListFilter.NOT_IN_DATABASE -> stringResource(R.string.app_list_filter_not_in_database)
     AppListFilter.MISMATCH -> stringResource(R.string.app_list_filter_mismatch)

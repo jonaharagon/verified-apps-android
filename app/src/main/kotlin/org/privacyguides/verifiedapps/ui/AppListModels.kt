@@ -23,10 +23,26 @@ enum class AppListSort {
 }
 
 enum class AppListFilter {
-    ALL,
     VERIFIED,
     NOT_IN_DATABASE,
     MISMATCH,
+}
+
+fun defaultStatusFilterMask(): Int =
+    AppListFilter.entries.fold(0) { mask, filter -> mask or statusFilterBit(filter) }
+
+fun statusFilterBit(filter: AppListFilter): Int = 1 shl filter.ordinal
+
+fun isStatusFilterSelected(mask: Int, filter: AppListFilter): Boolean =
+    mask and statusFilterBit(filter) != 0
+
+fun toggleStatusFilter(mask: Int, filter: AppListFilter): Int {
+    val bit = statusFilterBit(filter)
+    return if (mask and bit != 0) {
+        mask and bit.inv()
+    } else {
+        mask or bit
+    }
 }
 
 fun AppListEntry.matchesSearch(query: String): Boolean {
@@ -35,8 +51,7 @@ fun AppListEntry.matchesSearch(query: String): Boolean {
         packageName.contains(query, ignoreCase = true)
 }
 
-fun AppListEntry.matchesFilter(filter: AppListFilter): Boolean = when (filter) {
-    AppListFilter.ALL -> true
+fun AppListEntry.matchesStatusFilter(filter: AppListFilter): Boolean = when (filter) {
     AppListFilter.VERIFIED ->
         internalDatabaseInfo.internalDatabaseStatus == InternalDatabaseStatus.MATCH
     AppListFilter.NOT_IN_DATABASE ->
@@ -44,6 +59,11 @@ fun AppListEntry.matchesFilter(filter: AppListFilter): Boolean = when (filter) {
     AppListFilter.MISMATCH ->
         internalDatabaseInfo.internalDatabaseStatus == InternalDatabaseStatus.NOMATCH
 }
+
+fun AppListEntry.matchesStatusFilters(mask: Int): Boolean =
+    AppListFilter.entries.any { filter ->
+        isStatusFilterSelected(mask, filter) && matchesStatusFilter(filter)
+    }
 
 fun compareAppListEntries(a: AppListEntry, b: AppListEntry, sort: AppListSort): Int = when (sort) {
     AppListSort.NAME_ASC -> a.name.compareTo(b.name, ignoreCase = true)

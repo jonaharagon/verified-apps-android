@@ -52,9 +52,8 @@
     <string name="app_list_sort_name_desc">Name (Z–A)</string>
     <string name="app_list_sort_package">Package name</string>
     <string name="app_list_sort_status">Database status</string>
-    <string name="app_list_filter_all">All</string>
     <string name="app_list_filter_verified">Verified</string>
-    <string name="app_list_filter_not_in_database">Not in database</string>
+    <string name="app_list_filter_not_in_database">Unknown</string>
     <string name="app_list_filter_mismatch">Mismatch</string>
     <string name="app_list_status_verified">Verified in database</string>
     <string name="app_list_status_mismatch">Fingerprint mismatch</string>
