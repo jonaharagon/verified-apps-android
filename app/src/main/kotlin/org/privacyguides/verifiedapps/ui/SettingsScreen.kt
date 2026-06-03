@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui
+package org.privacyguides.verifiedapps.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,8 +30,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.soupslurpr.appverifier.R
-import dev.soupslurpr.appverifier.preferences.PreferencesViewModel
+import org.privacyguides.verifiedapps.R
+import org.privacyguides.verifiedapps.preferences.PreferencesViewModel
 import kotlinx.coroutines.launch
 
 /**

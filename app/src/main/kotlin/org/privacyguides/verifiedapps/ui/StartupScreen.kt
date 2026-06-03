@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui
+package org.privacyguides.verifiedapps.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,7 +35,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import dev.soupslurpr.appverifier.R
+import org.privacyguides.verifiedapps.R
 
 @Composable
 fun StartupScreen(

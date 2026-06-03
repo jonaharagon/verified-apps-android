@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui.theme
+package org.privacyguides.verifiedapps.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

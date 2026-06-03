@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui
+package org.privacyguides.verifiedapps.ui
 
 import android.app.ActivityOptions
 import android.content.ClipData
@@ -47,10 +47,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import dev.soupslurpr.appverifier.data.Hashes
-import dev.soupslurpr.appverifier.data.InternalDatabaseInfo
-import dev.soupslurpr.appverifier.data.InternalDatabaseStatus
-import dev.soupslurpr.appverifier.data.VerificationStatus
+import org.privacyguides.verifiedapps.BuildConfig
+import org.privacyguides.verifiedapps.data.Hashes
+import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
+import org.privacyguides.verifiedapps.data.InternalDatabaseStatus
+import org.privacyguides.verifiedapps.data.SubmissionUiState
 
 @Composable
 fun VerifyAppScreen(
@@ -58,24 +59,20 @@ fun VerifyAppScreen(
     name: String,
     packageName: String,
     hashes: Hashes,
-    verificationStatus: VerificationStatus,
-    appNotFound: Boolean,
-    onVerifyFromClipboard: (String) -> Unit,
     onLaunchedEffectHashEmpty: () -> Unit,
     internalDatabaseInfo: InternalDatabaseInfo,
     apkFailedToParse: Boolean,
     showHasMultipleSigners: Boolean,
-    showClipboardEmptyMessage: () -> Unit,
+    submissionState: SubmissionUiState,
+    onSubmitApp: () -> Unit,
 ) {
     val context = LocalContext.current
-
     val clipboardManager = LocalClipboardManager.current
-
     val verticalScroll = rememberScrollState()
-
-    var showMoreInfoAboutVerificationStatusDialog by rememberSaveable { mutableStateOf(false) }
-
     var showMoreInfoAboutInternalDatabaseStatusDialog by rememberSaveable { mutableStateOf(false) }
+
+    val submissionUrlConfigured = BuildConfig.APP_SUBMISSION_URL.isNotBlank()
+    val isSubmitting = submissionState is SubmissionUiState.Submitting
 
     LaunchedEffect(Unit) {
         if (hashes.hashes.isEmpty()) {
@@ -95,18 +92,6 @@ fun VerifyAppScreen(
             Text("APK FAILED TO PARSE")
             Text(
                 "Make sure you provided a valid apk file."
-            )
-        } else if (appNotFound) {
-            Text("APP NOT INSTALLED OR INVALID FORMAT")
-            Text(
-                "The package name doesn't seem to correspond to any installed user app." +
-                        "\nPlease note system apps are not included in the search."
-            )
-            Text(
-                "Also please make sure the provided text is in the correct format, like the " +
-                        "following:\n\ncom.example" +
-                        ".app\n96:C0:2C:55:75:5C:17:1C:68:13:70:29:3B:37:11:2B:4A:5D:F7:B9:82:C2:C5:58:05:4C:45:51:AD:F5:50:DC" +
-                        "\n\nThere may be multiple hashes, which is normal."
             )
         } else {
             Text(
@@ -129,6 +114,28 @@ fun VerifyAppScreen(
                 }
             }
             Spacer(Modifier.height(8.dp))
+            if (internalDatabaseInfo.internalDatabaseStatus == InternalDatabaseStatus.NOT_FOUND) {
+                Text(
+                    "Not in database — submit fingerprints for review.",
+                    style = typography.bodyMedium,
+                )
+                Spacer(Modifier.height(8.dp))
+                if (submissionUrlConfigured) {
+                    Button(
+                        onClick = onSubmitApp,
+                        enabled = !isSubmitting,
+                    ) {
+                        Text(
+                            if (isSubmitting) {
+                                "Submitting…"
+                            } else {
+                                "Submit app for inclusion"
+                            }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
             if (icon != null) {
                 Image(
                     rememberDrawablePainter(drawable = icon),
@@ -174,37 +181,9 @@ fun VerifyAppScreen(
             }
             Button(onClick = {
                 val clip: ClipData = ClipData.newPlainText(mimeType, verificationData)
-                clipboardManager.setClip(ClipEntry(clip));
+                clipboardManager.setClip(ClipEntry(clip))
             }) {
                 Text("Copy Verification Info")
-            }
-            Button(onClick = {
-                if (clipboardManager.hasText()) {
-                    onVerifyFromClipboard(clipboardManager.getText()!!.text)
-                } else {
-                    showClipboardEmptyMessage()
-                }
-            }) {
-                Text("Verify from clipboard")
-            }
-            Text(
-                "Verification Status:",
-            )
-            Row {
-                FilledTonalButton(
-                    onClick = { showMoreInfoAboutVerificationStatusDialog = true },
-                ) {
-                    Text(
-                        verificationStatus.simpleVerificationStatus.name,
-                        style = typography.headlineLarge
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        Icons.Default.Info,
-                        "More info about verification status",
-                        tint = verificationStatus.simpleVerificationStatus.color,
-                    )
-                }
             }
         }
 
@@ -250,38 +229,6 @@ fun VerifyAppScreen(
                                         " sure the app isn't from them."
                             )
                         }
-                    }
-                }
-            }
-        )
-    }
-
-    if (showMoreInfoAboutVerificationStatusDialog) {
-        AlertDialog(
-            onDismissRequest = { showMoreInfoAboutVerificationStatusDialog = false },
-            confirmButton = {
-                TextButton(
-                    { showMoreInfoAboutVerificationStatusDialog = false }
-                ) {
-                    Text(stringResource(id = android.R.string.ok))
-                }
-            },
-            title = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        verificationStatus.name,
-                        style = typography.headlineSmall,
-                        color = verificationStatus.simpleVerificationStatus.color,
-                    )
-                }
-            },
-            text = {
-                LazyColumn {
-                    item {
-                        Text(verificationStatus.info)
                     }
                 }
             }

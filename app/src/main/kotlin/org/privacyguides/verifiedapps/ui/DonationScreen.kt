@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui
+package org.privacyguides.verifiedapps.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import dev.soupslurpr.appverifier.R
+import org.privacyguides.verifiedapps.R
 
 @Composable
 fun DonationScreen() {
@@ -33,8 +33,8 @@ fun DonationScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "Like AppVerifier? You can donate to soupslurpr, the lead developer of AppVerifier to support their work" +
-                    " on AppVerifier and their other open source projects. Thank you!"
+            "Like Verified Apps? You can donate to soupslurpr, the lead developer of Verified Apps to support their work" +
+                    " on Verified Apps and their other open source projects. Thank you!"
         )
         Text("")
         Text("Monero address:")

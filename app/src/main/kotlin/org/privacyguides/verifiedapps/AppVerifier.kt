@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier
+package org.privacyguides.verifiedapps
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -20,11 +20,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -39,19 +39,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import dev.soupslurpr.appverifier.data.Hashes
-import dev.soupslurpr.appverifier.data.InternalDatabaseInfo
-import dev.soupslurpr.appverifier.preferences.PreferencesViewModel
-import dev.soupslurpr.appverifier.ui.AppListScreen
-import dev.soupslurpr.appverifier.ui.CreditsScreen
-import dev.soupslurpr.appverifier.ui.DonationScreen
-import dev.soupslurpr.appverifier.ui.LicenseScreen
-import dev.soupslurpr.appverifier.ui.PrivacyPolicyScreen
-import dev.soupslurpr.appverifier.ui.SettingsScreen
-import dev.soupslurpr.appverifier.ui.StartupScreen
-import dev.soupslurpr.appverifier.ui.VerifyAppScreen
-import dev.soupslurpr.appverifier.ui.VerifyAppViewModel
-import kotlinx.coroutines.launch
+import org.privacyguides.verifiedapps.data.Hashes
+import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
+import org.privacyguides.verifiedapps.data.SubmissionUiState
+import org.privacyguides.verifiedapps.preferences.PreferencesViewModel
+import org.privacyguides.verifiedapps.ui.AppListScreen
+import org.privacyguides.verifiedapps.ui.CreditsScreen
+import org.privacyguides.verifiedapps.ui.DonationScreen
+import org.privacyguides.verifiedapps.ui.LicenseScreen
+import org.privacyguides.verifiedapps.ui.PrivacyPolicyScreen
+import org.privacyguides.verifiedapps.ui.SettingsScreen
+import org.privacyguides.verifiedapps.ui.StartupScreen
+import org.privacyguides.verifiedapps.ui.VerifyAppScreen
+import org.privacyguides.verifiedapps.ui.VerifyAppViewModel
 
 enum class AppVerifierScreens(@StringRes val title: Int) {
     Start(title = R.string.app_name),
@@ -81,10 +81,9 @@ fun AppVerifierApp(
     val preferencesUiState = preferencesViewModel.uiState.collectAsState()
 
     val verifyAppUiState = verifyAppViewModel.uiState.collectAsState()
+    val submissionState = verifyAppViewModel.submissionState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
-
-    val snackbarCoroutineScope = rememberCoroutineScope()
 
     val navController = rememberNavController()
 
@@ -176,23 +175,30 @@ fun AppVerifierApp(
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.VerifyApp) {
+                LaunchedEffect(submissionState.value) {
+                    when (val state = submissionState.value) {
+                        SubmissionUiState.Success -> {
+                            snackbarHostState.showSnackbar("App submitted successfully. Thank you!")
+                            verifyAppViewModel.clearSubmissionMessage()
+                        }
+                        is SubmissionUiState.Error -> {
+                            snackbarHostState.showSnackbar(state.message)
+                            verifyAppViewModel.clearSubmissionMessage()
+                        }
+                        else -> Unit
+                    }
+                }
                 VerifyAppScreen(
                     verifyAppUiState.value.icon.value,
                     verifyAppUiState.value.name.value,
                     verifyAppUiState.value.packageName.value,
                     verifyAppUiState.value.hashes.value,
-                    verifyAppUiState.value.verificationStatus.value,
-                    verifyAppUiState.value.appNotFoundOrInvalidFormat.value,
-                    { verifyAppViewModel.verifyFromText(it) },
                     { navController.navigateUp() },
                     verifyAppUiState.value.internalDatabaseInfo.value,
                     verifyAppUiState.value.apkFailedToParse.value,
                     preferencesUiState.value.showHasMultipleSigners.second.value,
-                    {
-                        snackbarCoroutineScope.launch {
-                            snackbarHostState.showSnackbar("Clipboard is empty!")
-                        }
-                    }
+                    submissionState.value,
+                    { verifyAppViewModel.submitAppForDatabaseInclusion() },
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.Settings) {

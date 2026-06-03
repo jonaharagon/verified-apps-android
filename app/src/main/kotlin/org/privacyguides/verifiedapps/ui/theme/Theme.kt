@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui.theme
+package org.privacyguides.verifiedapps.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -12,7 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import dev.soupslurpr.appverifier.preferences.PreferencesViewModel
+import org.privacyguides.verifiedapps.preferences.PreferencesViewModel
 
 /**
  * Dark color scheme for devices < Android 12, which do not support dynamic color.

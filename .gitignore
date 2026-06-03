@@ -15,10 +15,10 @@
 .cxx
 local.properties
 /app/release/app-release.aab
-/app/release/AppVerifier-release.apks
+/app/release/VerifiedApps-release.apks
 /app/release/output-metadata.json
 /app/release/app-release.apk
-/app/release/AppVerifier-app-release.apks
+/app/release/VerifiedApps-app-release.apks
 /app/release/apk/release/app-release.apk
 /app/release/apk/release/output-metadata.json
 /app/release/bundletool-all-1.15.6.jar

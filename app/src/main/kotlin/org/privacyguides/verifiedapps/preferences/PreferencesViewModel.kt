@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.preferences
+package org.privacyguides.verifiedapps.preferences
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.core.DataStore

@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui
+package org.privacyguides.verifiedapps.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,16 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import dev.soupslurpr.appverifier.R
+import org.privacyguides.verifiedapps.R
 
 @Composable
-fun PrivacyPolicyScreen() {
+fun LicenseScreen() {
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
         Text(
             modifier = Modifier.padding(horizontal = 15.dp),
-            text = stringResource(R.string.full_privacy_policy)
+            text = stringResource(R.string.full_license)
         )
 
         Spacer(Modifier.padding(WindowInsets.navigationBars.asPaddingValues()))

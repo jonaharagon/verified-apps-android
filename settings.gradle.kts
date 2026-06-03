@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AppVerifier"
+rootProject.name = "VerifiedApps"
 include(":app")

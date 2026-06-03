@@ -5,17 +5,18 @@ plugins {
 }
 
 android {
-    namespace = "dev.soupslurpr.appverifier"
+    namespace = "org.privacyguides.verifiedapps"
     compileSdk = 35
     buildToolsVersion = "36.0.0"
     ndkVersion = "28.1.13356709"
 
     defaultConfig {
-        applicationId = "dev.soupslurpr.appverifier"
+        applicationId = "org.privacyguides.verifiedapps"
         minSdk = 28
         targetSdk = 35
         versionCode = 13
         versionName = versionCode.toString()
+        buildConfigField("String", "APP_SUBMISSION_URL", "\"\"")
 
         vectorDrawables {
             useSupportLibrary = true
@@ -55,12 +56,18 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
+            buildConfigField(
+                "String",
+                "APP_SUBMISSION_URL",
+                "\"http://10.0.2.2:8080/api/apps\"",
+            )
         }
         create("staging") {
             initWith(getByName("release"))
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("String", "APP_SUBMISSION_URL", "\"\"")
         }
     }
     // Useless since we don't publish to the Google Play Store and they are the only ones who can
@@ -76,6 +83,8 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("androidx.datastore:datastore-preferences:1.1.4")

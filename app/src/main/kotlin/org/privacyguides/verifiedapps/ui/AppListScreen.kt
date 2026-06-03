@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier.ui
+package org.privacyguides.verifiedapps.ui
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -36,11 +36,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import dev.soupslurpr.appverifier.data.Hashes
-import dev.soupslurpr.appverifier.data.InternalDatabaseInfo
-import dev.soupslurpr.appverifier.data.InternalDatabaseStatus
-import dev.soupslurpr.appverifier.data.SimpleVerificationStatus
-import dev.soupslurpr.appverifier.data.VerificationInfo
+import org.privacyguides.verifiedapps.data.Hashes
+import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
+import org.privacyguides.verifiedapps.data.InternalDatabaseStatus
+import org.privacyguides.verifiedapps.data.SimpleInternalDatabaseStatus
+import org.privacyguides.verifiedapps.data.VerificationInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +111,7 @@ fun AppListScreen(
             )
         ) {
             items(userInstalledPackages) {
-                // Do not show AppVerifier in the list as there is no point in using it to verify itself.
+                // Do not show Verified Apps in the list as there is no point in using it to verify itself.
                 if (it.packageName == context.packageName) return@items
 
                 val packageInfo = packageManager.getPackageInfo(
@@ -188,14 +188,14 @@ fun AppItem(
                     Icons.Filled.Verified,
                     "Verified successfully with internal database",
                     Modifier,
-                    SimpleVerificationStatus.SUCCESS.color,
+                    SimpleInternalDatabaseStatus.SUCCESS.color,
                 )
 
                 InternalDatabaseStatus.NOMATCH -> Icon(
                     Icons.Filled.Error,
                     "Verification with internal database NOT successful!",
                     Modifier,
-                    SimpleVerificationStatus.FAILURE.color,
+                    SimpleInternalDatabaseStatus.FAILURE.color,
                 )
             }
         }

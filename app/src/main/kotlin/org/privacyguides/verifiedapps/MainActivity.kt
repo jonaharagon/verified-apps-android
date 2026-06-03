@@ -1,4 +1,4 @@
-package dev.soupslurpr.appverifier
+package org.privacyguides.verifiedapps
 
 import android.content.Context
 import android.content.Intent
@@ -14,10 +14,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.soupslurpr.appverifier.preferences.PreferencesViewModel
-import dev.soupslurpr.appverifier.ui.ReviewPrivacyPolicyAndLicense
-import dev.soupslurpr.appverifier.ui.VerifyAppViewModel
-import dev.soupslurpr.appverifier.ui.theme.AppVerifierTheme
+import org.privacyguides.verifiedapps.preferences.PreferencesViewModel
+import org.privacyguides.verifiedapps.ui.ReviewPrivacyPolicyAndLicense
+import org.privacyguides.verifiedapps.ui.VerifyAppViewModel
+import org.privacyguides.verifiedapps.ui.theme.AppVerifierTheme
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "preferences")
 
@@ -40,18 +40,9 @@ class MainActivity : ComponentActivity() {
                 (intent.action == Intent.ACTION_VIEW)
 
             if (isActionSend) {
-                val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
                 val extraStream: Uri? = intent.getParcelableExtra(Intent.EXTRA_STREAM)
 
-                if (extraText != null) {
-                    val verificationInfoText = verifyAppViewModel.getVerificationInfoText(extraText)
-
-                    verifyAppViewModel.findAndSetAppVerificationInfoFromPackageName(
-                        verificationInfoText.lines()[0],
-                        packageManager
-                    )
-                    verifyAppViewModel.verifyFromText(verificationInfoText)
-                } else if (extraStream != null) {
+                if (extraStream != null) {
                     verifyAppViewModel.setApkVerificationInfoAndInternalDatabaseStatusFromUri(
                         contentResolver,
                         extraStream,
