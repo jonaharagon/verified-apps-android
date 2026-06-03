@@ -53,6 +53,7 @@ import org.privacyguides.verifiedapps.ui.AboutScreen
 import org.privacyguides.verifiedapps.ui.AppListScreen
 import org.privacyguides.verifiedapps.ui.CreditsScreen
 import org.privacyguides.verifiedapps.ui.LicenseScreen
+import org.privacyguides.verifiedapps.ui.OpenApkScreen
 import org.privacyguides.verifiedapps.ui.PrivacyPolicyScreen
 import org.privacyguides.verifiedapps.ui.SettingsScreen
 import org.privacyguides.verifiedapps.ui.VerifyAppScreen
@@ -60,6 +61,7 @@ import org.privacyguides.verifiedapps.ui.VerifyAppViewModel
 
 enum class AppVerifierScreens(@StringRes val title: Int) {
     AppList(title = R.string.app_list),
+    OpenApk(title = R.string.nav_open_apk),
     VerifyApp(title = R.string.verify_app),
     Settings(title = R.string.settings),
     About(title = R.string.about),
@@ -69,9 +71,10 @@ enum class AppVerifierScreens(@StringRes val title: Int) {
 }
 
 private val bottomNavRoutes = setOf(
-    AppVerifierScreens.AppList.name,
-    AppVerifierScreens.Settings.name,
     AppVerifierScreens.About.name,
+    AppVerifierScreens.AppList.name,
+    AppVerifierScreens.OpenApk.name,
+    AppVerifierScreens.Settings.name,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -146,12 +149,8 @@ fun AppVerifierApp(
                         label = { Text(stringResource(R.string.app_list)) },
                     )
                     NavigationBarItem(
-                        selected = false,
-                        onClick = {
-                            openApkFileLauncher.launch(
-                                arrayOf("application/vnd.android.package-archive"),
-                            )
-                        },
+                        selected = currentRoute == AppVerifierScreens.OpenApk.name,
+                        onClick = { navigateToBottomNavDestination(AppVerifierScreens.OpenApk) },
                         icon = {
                             Icon(
                                 imageVector = Icons.Default.FileOpen,
@@ -210,6 +209,15 @@ fun AppVerifierApp(
                         verifyAppViewModel.getInternalDatabaseInfoFromVerificationInfo(it)
                     },
                     showSystemApps = preferencesUiState.value.showSystemApps.second.value,
+                )
+            }
+            composableWithDefaultSlideTransitions(route = AppVerifierScreens.OpenApk) {
+                OpenApkScreen(
+                    onOpenApkFile = {
+                        openApkFileLauncher.launch(
+                            arrayOf("application/vnd.android.package-archive"),
+                        )
+                    },
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.VerifyApp) {

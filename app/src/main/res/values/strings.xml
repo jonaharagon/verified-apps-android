@@ -48,6 +48,8 @@
     <string name="app_list_empty">No apps match your search or filters</string>
     <string name="app_list_sort">Sort</string>
     <string name="nav_open_apk">Open APK</string>
+    <string name="open_apk_message">Select an APK file to read its signing certificate and check it against the internal database.</string>
+    <string name="open_apk_choose_file">Choose APK file</string>
     <string name="app_list_sort_name_asc">Name (A–Z)</string>
     <string name="app_list_sort_name_desc">Name (Z–A)</string>
     <string name="app_list_sort_package">Package name</string>
