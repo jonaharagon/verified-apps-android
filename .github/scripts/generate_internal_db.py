@@ -118,81 +118,59 @@ def format_source_enum(display_to_enum: dict[str, str]) -> str:
     return "\n".join(lines)
 
 
+def sources_for_signature(sig: dict, display_to_enum: dict[str, str]) -> list[str]:
+    sources = sig.get("sources", [])
+    if sources:
+        source_names = [s.get("name", "").strip() for s in sources]
+    else:
+        source_names = [sig.get("source", "").strip()]
+
+    kotlin_sources: list[str] = []
+    for raw_name in source_names:
+        source = privacyguides_to_source(raw_name, display_to_enum)
+        if source is not None:
+            kotlin_sources.append(source)
+    return sorted(set(kotlin_sources))
+
+
+def format_hashes_block(sources: list[str], fingerprints: list[str]) -> str:
+    source_lines = ",\n".join(f"{S20}{s}" for s in sources)
+    fp_lines = ",\n".join(f'{S20}"{fp}"' for fp in fingerprints)
+    return (
+        f"""{S12}Hashes(
+{S16}listOf(
+{source_lines}
+{S16}),
+{S16}listOf(
+{fp_lines}
+{S16}),
+{S16}false
+{S12})"""
+    )
+
+
 def format_entry(package: str, signatures: list, display_to_enum: dict[str, str]) -> str | None:
-    fp_to_sources: dict[str, set[str]] = {}
+    """One data.yml signature entry becomes one Hashes block (order preserved per entry)."""
+    hashes_blocks: list[str] = []
 
     for sig in signatures:
         raw_fingerprint = sig.get("fingerprint", "").strip()
         if not raw_fingerprint:
             continue
 
-        sources = sig.get("sources", [])
-        if sources:
-            source_names = [s.get("name", "").strip() for s in sources]
-        else:
-            source_names = [sig.get("source", "").strip()]
+        fingerprints = [
+            line.strip()
+            for line in raw_fingerprint.splitlines()
+            if line.strip()
+        ]
+        kotlin_sources = sources_for_signature(sig, display_to_enum)
+        if not fingerprints or not kotlin_sources:
+            continue
 
-        for raw_name in source_names:
-            source = privacyguides_to_source(raw_name, display_to_enum)
-            if source is None:
-                continue
-            for fingerprint in raw_fingerprint.splitlines():
-                fingerprint = fingerprint.strip()
-                if not fingerprint:
-                    continue
-                if fingerprint not in fp_to_sources:
-                    fp_to_sources[fingerprint] = set()
-                fp_to_sources[fingerprint].add(source)
+        hashes_blocks.append(format_hashes_block(kotlin_sources, fingerprints))
 
-    if not fp_to_sources:
+    if not hashes_blocks:
         return None
-
-    source_set_to_fps: dict[frozenset[str], list[str]] = {}
-    for fingerprint, sources in fp_to_sources.items():
-        key = frozenset(sources)
-        if key not in source_set_to_fps:
-            source_set_to_fps[key] = []
-        source_set_to_fps[key].append(fingerprint)
-
-    hashes_blocks = []
-    for source_set, fingerprints in sorted(
-        source_set_to_fps.items(), key=lambda item: sorted(item[1])[0]
-    ):
-        sorted_sources = sorted(source_set)
-        sorted_fps = sorted(fingerprints)
-        source_lines = ",\n".join(f"{S20}{s}" for s in sorted_sources)
-        fp_lines = ",\n".join(f'{S20}"{fp}"' for fp in sorted_fps)
-        hashes_blocks.append(
-            f"""{S12}Hashes(
-{S16}listOf(
-{source_lines}
-{S16}),
-{S16}listOf(
-{fp_lines}
-{S16}),
-{S16}false
-{S12})"""
-        )
-
-    if len(fp_to_sources) > 1:
-        all_sources: set[str] = set()
-        for sources in fp_to_sources.values():
-            all_sources.update(sources)
-        sorted_sources = sorted(all_sources)
-        sorted_all_fps = sorted(fp_to_sources.keys())
-        source_lines = ",\n".join(f"{S20}{s}" for s in sorted_sources)
-        fp_lines = ",\n".join(f'{S20}"{fp}"' for fp in sorted_all_fps)
-        hashes_blocks.append(
-            f"""{S12}Hashes(
-{S16}listOf(
-{source_lines}
-{S16}),
-{S16}listOf(
-{fp_lines}
-{S16}),
-{S16}false
-{S12})"""
-        )
 
     joined = ",\n".join(hashes_blocks)
     return (
