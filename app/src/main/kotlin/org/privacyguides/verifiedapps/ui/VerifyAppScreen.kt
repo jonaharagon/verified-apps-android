@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -64,6 +65,7 @@ import org.privacyguides.verifiedapps.R
 import org.privacyguides.verifiedapps.data.Hashes
 import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
 import org.privacyguides.verifiedapps.data.InternalDatabaseStatus
+import org.privacyguides.verifiedapps.codeberg.CodebergAppSubmission
 import org.privacyguides.verifiedapps.github.GitHubAppSubmission
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,6 +82,7 @@ fun VerifyAppScreen(
     showHasMultipleSigners: Boolean,
     showSharingTools: Boolean,
     alwaysShowGitHubSubmit: Boolean,
+    showCodebergSubmit: Boolean,
 ) {
     val context = LocalContext.current
     val verticalScroll = rememberScrollState()
@@ -224,10 +227,13 @@ fun VerifyAppScreen(
                             databaseStatus == InternalDatabaseStatus.NOMATCH ||
                             alwaysShowGitHubSubmit
                     if (showGitHubSubmit) {
+                        val clipboardManager = LocalClipboardManager.current
+                        val verificationData =
+                            GitHubAppSubmission.buildVerificationInfo(packageName, hashes)
                         when (databaseStatus) {
                             InternalDatabaseStatus.NOT_FOUND -> {
                                 Text(
-                                    "Not in database — submit fingerprints for review on GitHub.",
+                                    text = stringResource(R.string.not_found_submit_message),
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                             }
@@ -251,7 +257,27 @@ fun VerifyAppScreen(
                                 openGitHubSubmission(context, issueUri)
                             },
                         ) {
-                            Text("Submit on GitHub")
+                            Text(stringResource(R.string.submit_on_github))
+                        }
+                        if (showCodebergSubmit) {
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    copyVerificationInfoToClipboard(
+                                        context = context,
+                                        clipboardManager = clipboardManager,
+                                        verificationData = verificationData,
+                                    )
+                                    val issueUri = CodebergAppSubmission.newIssueUri(
+                                        packageName = packageName,
+                                        appLabel = name,
+                                        hashes = hashes,
+                                    )
+                                    openCodebergSubmission(context, issueUri)
+                                },
+                            ) {
+                                Text(stringResource(R.string.submit_to_codeberg))
+                            }
                         }
                     }
                 }
@@ -350,6 +376,20 @@ fun VerifyAppScreen(
     }
 }
 
+private fun copyVerificationInfoToClipboard(
+    context: android.content.Context,
+    clipboardManager: ClipboardManager,
+    verificationData: String,
+) {
+    val clip = ClipData.newPlainText("text/plain", verificationData)
+    clipboardManager.setClip(ClipEntry(clip))
+    Toast.makeText(
+        context,
+        context.getString(R.string.verification_info_copied_toast),
+        Toast.LENGTH_SHORT,
+    ).show()
+}
+
 private fun openGitHubSubmission(context: android.content.Context, issueUri: Uri) {
     val intent = Intent(Intent.ACTION_VIEW, issueUri)
     try {
@@ -358,6 +398,19 @@ private fun openGitHubSubmission(context: android.content.Context, issueUri: Uri
         Toast.makeText(
             context,
             "No browser found to open the GitHub submission page.",
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+}
+
+private fun openCodebergSubmission(context: android.content.Context, issueUri: Uri) {
+    val intent = Intent(Intent.ACTION_VIEW, issueUri)
+    try {
+        startActivity(context, intent, ActivityOptions.makeBasic().toBundle())
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.codeberg_submission_no_browser),
             Toast.LENGTH_LONG,
         ).show()
     }

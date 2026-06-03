@@ -325,7 +325,7 @@ fun AppListScreen(
             if (showSystemApps) {
                 PrimaryTabRow(
                     selectedTabIndex = selectedTab,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ) {
                     Tab(
                         selected = selectedTab == AppListTab.User.ordinal,

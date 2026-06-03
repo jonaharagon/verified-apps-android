@@ -234,6 +234,7 @@ fun AppVerifierApp(
                     preferencesUiState.value.showHasMultipleSigners.second.value,
                     preferencesUiState.value.showSharingTools.second.value,
                     preferencesUiState.value.alwaysShowGitHubSubmit.second.value,
+                    preferencesUiState.value.showCodebergSubmit.second.value,
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.License) {

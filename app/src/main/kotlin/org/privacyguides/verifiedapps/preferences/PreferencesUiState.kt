@@ -25,6 +25,12 @@ data class PreferencesUiState(
         mutableStateOf(false)
     ),
 
+    /** Whether to show the Codeberg submission button on the verify app screen. */
+    val showCodebergSubmit: Pair<Preferences.Key<Boolean>, MutableState<Boolean>> = Pair(
+        booleanPreferencesKey("SHOW_CODEBERG_SUBMIT"),
+        mutableStateOf(false),
+    ),
+
     /** Whether to include system apps in the app list. */
     val showSystemApps: Pair<Preferences.Key<Boolean>, MutableState<Boolean>> = Pair(
         (booleanPreferencesKey("SHOW_SYSTEM_APPS")),

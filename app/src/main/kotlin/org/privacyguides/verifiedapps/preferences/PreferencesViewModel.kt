@@ -34,6 +34,8 @@ class PreferencesViewModel(private val dataStore: DataStore<Preferences>) : View
                     settings[state.showSharingTools.first] ?: false
                 state.alwaysShowGitHubSubmit.second.value =
                     settings[state.alwaysShowGitHubSubmit.first] ?: false
+                state.showCodebergSubmit.second.value =
+                    settings[state.showCodebergSubmit.first] ?: false
                 state.showSystemApps.second.value =
                     settings[state.showSystemApps.first] ?: false
                 state.dynamicColor.second.value =
@@ -62,6 +64,8 @@ class PreferencesViewModel(private val dataStore: DataStore<Preferences>) : View
                     state.showSharingTools.second.value = value
                 state.alwaysShowGitHubSubmit.first ->
                     state.alwaysShowGitHubSubmit.second.value = value
+                state.showCodebergSubmit.first ->
+                    state.showCodebergSubmit.second.value = value
                 state.showSystemApps.first ->
                     state.showSystemApps.second.value = value
                 state.dynamicColor.first ->
