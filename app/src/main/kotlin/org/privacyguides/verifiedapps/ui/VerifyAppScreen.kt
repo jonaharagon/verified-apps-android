@@ -120,6 +120,7 @@ fun VerifyAppScreen(
                 Button(
                     onClick = {
                         val issueUri = GitHubAppSubmission.newIssueUri(
+                            packageManager = context.packageManager,
                             packageName = packageName,
                             appLabel = name,
                             hashes = hashes,

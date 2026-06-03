@@ -1,5 +1,6 @@
 package org.privacyguides.verifiedapps.github
 
+import android.content.pm.PackageManager
 import android.net.Uri
 import org.privacyguides.verifiedapps.data.Hashes
 
@@ -19,17 +20,20 @@ object GitHubAppSubmission {
     private const val VERIFIER_SOURCE_OTHER = "Other"
 
     fun newIssueUri(
+        packageManager: PackageManager,
         packageName: String,
         appLabel: String,
         hashes: Hashes,
     ): Uri {
         val verificationInfo = buildVerificationInfo(packageName, hashes)
         val title = buildTitle(appLabel, packageName)
+        val appSource = AppInstallSource.detectAppSource(packageManager, packageName)
 
         return Uri.parse(NEW_ISSUE_URI).buildUpon()
             .appendQueryParameter("template", TEMPLATE)
             .appendQueryParameter("title", title)
             .appendQueryParameter("verificationInfo", verificationInfo)
+            .appendQueryParameter("appSource", appSource)
             .appendQueryParameter("verifierSource", VERIFIER_SOURCE_OTHER)
             .build()
     }
