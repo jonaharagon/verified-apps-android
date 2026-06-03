@@ -34,20 +34,20 @@ import androidx.navigation.compose.rememberNavController
 import org.privacyguides.verifiedapps.data.Hashes
 import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
 import org.privacyguides.verifiedapps.preferences.PreferencesViewModel
+import org.privacyguides.verifiedapps.ui.AboutScreen
 import org.privacyguides.verifiedapps.ui.AppListScreen
 import org.privacyguides.verifiedapps.ui.CreditsScreen
 import org.privacyguides.verifiedapps.ui.LicenseScreen
 import org.privacyguides.verifiedapps.ui.PrivacyPolicyScreen
 import org.privacyguides.verifiedapps.ui.SettingsScreen
-import org.privacyguides.verifiedapps.ui.StartupScreen
 import org.privacyguides.verifiedapps.ui.VerifyAppScreen
 import org.privacyguides.verifiedapps.ui.VerifyAppViewModel
 
 enum class AppVerifierScreens(@StringRes val title: Int) {
-    Start(title = R.string.app_name),
     AppList(title = R.string.app_list),
     VerifyApp(title = R.string.verify_app),
     Settings(title = R.string.settings),
+    About(title = R.string.about),
     License(title = R.string.license),
     PrivacyPolicy(title = R.string.privacy_policy),
     Credits(title = R.string.credits),
@@ -70,7 +70,7 @@ fun AppVerifierApp(
 //    val backStackEntry by navController.currentBackStackEntryAsState()
 
 //    val currentScreen = AppVerifierScreens.valueOf(
-//        backStackEntry?.destination?.route ?: AppVerifierScreens.Start.name
+//        backStackEntry?.destination?.route ?: AppVerifierScreens.AppList.name
 //    )
 
     val context = LocalContext.current
@@ -94,33 +94,12 @@ fun AppVerifierApp(
         startDestination = if (isActionSend || isActionView) {
             AppVerifierScreens.VerifyApp.name
         } else {
-            AppVerifierScreens.Start.name
+            AppVerifierScreens.AppList.name
         },
         modifier = modifier,
     ) {
-            composableWithDefaultSlideTransitions(route = AppVerifierScreens.Start) {
-                StartupScreen(
-                    modifier = modifier,
-                    onSettingsButtonClicked = {
-                        navController.navigate(AppVerifierScreens.Settings.name)
-                    },
-                    onAppListButtonClicked = {
-                        navController.navigate(AppVerifierScreens.AppList.name)
-                    },
-                    onVerifyApkFileButtonClicked = {
-                        openApkFileLauncher.launch(arrayOf("application/vnd.android.package-archive"))
-                    },
-                    onLaunchedEffect = {
-                        // clear VerifyAppUiState when exiting VerifyAppScreen from opening an apk and going back to StartupScreen.
-                        verifyAppViewModel.clearUiState()
-                        // clear searchQuery when going back to StartupScreen.
-                        searchQuery = ""
-                    }
-                )
-            }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.AppList) {
                 AppListScreen(
-                    onNavigateUp = { navController.navigateUp() },
                     searchQuery,
                     { name: String, packageName: String, hashes: Hashes, icon: Drawable, internalDatabaseInfo:
                     InternalDatabaseInfo ->
@@ -133,13 +112,27 @@ fun AppVerifierApp(
                         verifyAppViewModel.setAppIcon(icon)
                         navController.navigate(AppVerifierScreens.VerifyApp.name)
                     },
-                    { verifyAppViewModel.clearUiState() },
-                    { searchQuery = it },
-                    { },
-                    { },
-                    { verifyAppViewModel.getHashesFromPackageInfo(it) },
-                    { verifyAppViewModel.getInternalDatabaseInfoFromVerificationInfo(it) },
-                    preferencesUiState.value.showSystemApps.second.value,
+                    onLaunchedEffect = {
+                        verifyAppViewModel.clearUiState()
+                        searchQuery = ""
+                    },
+                    onQueryChange = { searchQuery = it },
+                    onSearch = { },
+                    onSearchActiveChange = { },
+                    onNavigateToSettings = {
+                        navController.navigate(AppVerifierScreens.Settings.name)
+                    },
+                    onNavigateToAbout = {
+                        navController.navigate(AppVerifierScreens.About.name)
+                    },
+                    onVerifyApkFile = {
+                        openApkFileLauncher.launch(arrayOf("application/vnd.android.package-archive"))
+                    },
+                    getHashesFromPackageInfo = { verifyAppViewModel.getHashesFromPackageInfo(it) },
+                    getInternalDatabaseInfoFromVerificationInfo = {
+                        verifyAppViewModel.getInternalDatabaseInfoFromVerificationInfo(it)
+                    },
+                    showSystemApps = preferencesUiState.value.showSystemApps.second.value,
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.VerifyApp) {
@@ -160,6 +153,12 @@ fun AppVerifierApp(
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.Settings) {
                 SettingsScreen(
                     onNavigateUp = { navController.navigateUp() },
+                    preferencesViewModel = preferencesViewModel,
+                )
+            }
+            composableWithDefaultSlideTransitions(route = AppVerifierScreens.About) {
+                AboutScreen(
+                    onNavigateUp = { navController.navigateUp() },
                     onLicenseIconButtonClicked = {
                         navController.navigate(AppVerifierScreens.License.name)
                     },
@@ -169,7 +168,6 @@ fun AppVerifierApp(
                     onCreditsIconButtonClicked = {
                         navController.navigate(AppVerifierScreens.Credits.name)
                     },
-                    preferencesViewModel = preferencesViewModel,
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.License) {

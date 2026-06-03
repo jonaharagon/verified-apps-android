@@ -1,6 +1,7 @@
 package org.privacyguides.verifiedapps.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -58,7 +59,9 @@ fun ReviewPrivacyPolicyAndLicense(
                 style = MaterialTheme.typography.bodyMedium,
             )
             ListItem(
-                modifier = Modifier.toggleable(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .toggleable(
                     value = checked,
                     role = Role.Checkbox,
                     onValueChange = { checked = it },

@@ -1,6 +1,5 @@
 package org.privacyguides.verifiedapps.preferences
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -10,17 +9,15 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class PreferencesViewModel(private val dataStore: DataStore<Preferences>) : ViewModel() {
-    /**
-     * Settings state
-     */
     private val _uiState = MutableStateFlow(PreferencesUiState())
     val uiState: StateFlow<PreferencesUiState> = _uiState.asStateFlow()
+
+    private val _preferencesLoaded = MutableStateFlow(false)
+    val preferencesLoaded: StateFlow<Boolean> = _preferencesLoaded.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -28,74 +25,55 @@ class PreferencesViewModel(private val dataStore: DataStore<Preferences>) : View
         }
     }
 
-    /**
-     * Populate the values of the settings from the Preferences DataStore.
-     * This function is only called from this ViewModel's init
-     */
     private suspend fun populateSettingsFromDatastore() {
-        dataStore.data.map { settings ->
-            _uiState.update { currentState ->
-                currentState.copy(
-                    acceptedPrivacyPolicyAndLicense = Pair(
-                        uiState.value.acceptedPrivacyPolicyAndLicense.first,
-                        mutableStateOf(
-                            settings[uiState.value.acceptedPrivacyPolicyAndLicense.first] ?: uiState.value
-                                .acceptedPrivacyPolicyAndLicense.second.value
-                        )
-                    ),
-                    showHasMultipleSigners = Pair(
-                        uiState.value.showHasMultipleSigners.first,
-                        mutableStateOf(
-                            settings[uiState.value.showHasMultipleSigners.first] ?: uiState.value
-                                .showHasMultipleSigners.second.value
-                        )
-                    ),
-                    showSharingTools = Pair(
-                        uiState.value.showSharingTools.first,
-                        mutableStateOf(
-                            settings[uiState.value.showSharingTools.first] ?: uiState.value
-                                .showSharingTools.second.value
-                        )
-                    ),
-                    alwaysShowGitHubSubmit = Pair(
-                        uiState.value.alwaysShowGitHubSubmit.first,
-                        mutableStateOf(
-                            settings[uiState.value.alwaysShowGitHubSubmit.first] ?: uiState.value
-                                .alwaysShowGitHubSubmit.second.value
-                        )
-                    ),
-                    showSystemApps = Pair(
-                        uiState.value.showSystemApps.first,
-                        mutableStateOf(
-                            settings[uiState.value.showSystemApps.first] ?: uiState.value
-                                .showSystemApps.second.value
-                        )
-                    ),
-                    dynamicColor = Pair(
-                        uiState.value.dynamicColor.first,
-                        mutableStateOf(
-                            settings[uiState.value.dynamicColor.first] ?: uiState.value
-                                .dynamicColor.second.value
-                        ),
-                    ),
-                    pitchBlackBackground = Pair(
-                        uiState.value.pitchBlackBackground.first,
-                        mutableStateOf(
-                            settings[uiState.value.pitchBlackBackground.first] ?: uiState.value
-                                .pitchBlackBackground.second.value
-                        )
-                    ),
-                )
+        dataStore.data.collect { settings ->
+            _uiState.update { state ->
+                state.acceptedPrivacyPolicyAndLicense.second.value =
+                    settings[state.acceptedPrivacyPolicyAndLicense.first] ?: false
+                state.showHasMultipleSigners.second.value =
+                    settings[state.showHasMultipleSigners.first] ?: false
+                state.showSharingTools.second.value =
+                    settings[state.showSharingTools.first] ?: false
+                state.alwaysShowGitHubSubmit.second.value =
+                    settings[state.alwaysShowGitHubSubmit.first] ?: false
+                state.showSystemApps.second.value =
+                    settings[state.showSystemApps.first] ?: false
+                state.dynamicColor.second.value =
+                    settings[state.dynamicColor.first] ?: true
+                state.pitchBlackBackground.second.value =
+                    settings[state.pitchBlackBackground.first] ?: false
+                state
             }
-        }.collect()
+            _preferencesLoaded.value = true
+        }
     }
 
-    /**
-     * Set a preference to a value and save to Preferences DataStore
-     */
     suspend fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
+        updateLocalPreference(key, value)
         dataStore.edit { preferences ->
             preferences[key] = value
+        }
+    }
+
+    private fun updateLocalPreference(key: Preferences.Key<Boolean>, value: Boolean) {
+        _uiState.update { state ->
+            when (key) {
+                state.acceptedPrivacyPolicyAndLicense.first ->
+                    state.acceptedPrivacyPolicyAndLicense.second.value = value
+                state.showHasMultipleSigners.first ->
+                    state.showHasMultipleSigners.second.value = value
+                state.showSharingTools.first ->
+                    state.showSharingTools.second.value = value
+                state.alwaysShowGitHubSubmit.first ->
+                    state.alwaysShowGitHubSubmit.second.value = value
+                state.showSystemApps.first ->
+                    state.showSystemApps.second.value = value
+                state.dynamicColor.first ->
+                    state.dynamicColor.second.value = value
+                state.pitchBlackBackground.first ->
+                    state.pitchBlackBackground.second.value = value
+            }
+            state
         }
     }
 

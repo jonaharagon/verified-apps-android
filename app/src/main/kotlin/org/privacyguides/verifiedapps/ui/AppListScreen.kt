@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,20 +25,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -78,7 +83,6 @@ private enum class AppListTab {
 
 @Composable
 fun AppListScreen(
-    onNavigateUp: () -> Unit,
     searchQuery: String,
     onClickAppItem: (
         name: String,
@@ -91,6 +95,9 @@ fun AppListScreen(
     onQueryChange: (query: String) -> Unit,
     onSearch: (query: String) -> Unit,
     onSearchActiveChange: (active: Boolean) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToAbout: () -> Unit,
+    onVerifyApkFile: () -> Unit,
     getHashesFromPackageInfo: (packageInfo: PackageInfo) -> Hashes,
     getInternalDatabaseInfoFromVerificationInfo: (verification: VerificationInfo) -> InternalDatabaseInfo,
     showSystemApps: Boolean,
@@ -180,17 +187,91 @@ fun AppListScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            val navigationBarPadding =
+                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 8.dp + navigationBarPadding,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                HorizontalFloatingToolbar(
+                    expanded = true,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Box {
+                        IconButton(onClick = { sortMenuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Sort,
+                                contentDescription = stringResource(R.string.toolbar_sort),
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = sortMenuExpanded,
+                            onDismissRequest = { sortMenuExpanded = false },
+                        ) {
+                            AppListSort.entries.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(appListSortLabel(option)) },
+                                    onClick = {
+                                        sortOrdinal = option.ordinal
+                                        sortMenuExpanded = false
+                                    },
+                                    leadingIcon = if (sortOrder == option) {
+                                        { Icon(Icons.Default.CheckCircle, contentDescription = null) }
+                                    } else {
+                                        null
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.toolbar_settings),
+                        )
+                    }
+                    IconButton(onClick = onNavigateToAbout) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = stringResource(R.string.toolbar_about),
+                        )
+                    }
+                }
+                FloatingActionButton(onClick = onVerifyApkFile) {
+                    Icon(
+                        imageVector = Icons.Filled.FileOpen,
+                        contentDescription = stringResource(R.string.toolbar_verify_apk),
+                    )
+                }
+            }
+        },
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onNavigateUp) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.navigate_up),
-                        )
+                    if (!searchFieldVisible) {
+                        IconButton(onClick = { searchFieldVisible = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = stringResource(R.string.app_list_search),
+                                tint = if (searchQuery.isNotEmpty()) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        }
                     }
                 },
                 title = {
@@ -230,43 +311,6 @@ fun AppListScreen(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = stringResource(R.string.app_list_search_close),
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = { searchFieldVisible = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = stringResource(R.string.app_list_search),
-                                tint = if (searchQuery.isNotEmpty()) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                            )
-                        }
-                    }
-                    IconButton(onClick = { sortMenuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Sort,
-                            contentDescription = stringResource(R.string.app_list_sort),
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = sortMenuExpanded,
-                        onDismissRequest = { sortMenuExpanded = false },
-                    ) {
-                        AppListSort.entries.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(appListSortLabel(option)) },
-                                onClick = {
-                                    sortOrdinal = option.ordinal
-                                    sortMenuExpanded = false
-                                },
-                                leadingIcon = if (sortOrder == option) {
-                                    { Icon(Icons.Default.CheckCircle, contentDescription = null) }
-                                } else {
-                                    null
-                                },
                             )
                         }
                     }
@@ -363,7 +407,7 @@ fun AppListScreen(
                         start = 16.dp,
                         end = 16.dp,
                         top = 8.dp,
-                        bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                        bottom = 8.dp,
                     ),
                 ) {
                     items(visibleEntries, key = { it.packageName }) { entry ->

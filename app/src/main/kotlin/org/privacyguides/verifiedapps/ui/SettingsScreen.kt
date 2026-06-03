@@ -1,7 +1,6 @@
 package org.privacyguides.verifiedapps.ui
 
 import android.os.Build
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +13,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +27,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,12 +38,8 @@ import org.privacyguides.verifiedapps.preferences.PreferencesViewModel
 @Composable
 fun SettingsScreen(
     onNavigateUp: () -> Unit,
-    onLicenseIconButtonClicked: () -> Unit,
-    onPrivacyPolicyIconButtonClicked: () -> Unit,
-    onCreditsIconButtonClicked: () -> Unit,
     preferencesViewModel: PreferencesViewModel,
 ) {
-    val localUriHandler = LocalUriHandler.current
     val preferencesUiState by preferencesViewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val dynamicColorAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -139,60 +131,6 @@ fun SettingsScreen(
                             checked = preferencesUiState.pitchBlackBackground.second.value,
                             onCheckedChange = null,
                         )
-                    },
-                )
-            }
-
-            Column {
-                Text(
-                    text = stringResource(R.string.about),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(8.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-                ListItem(
-                    modifier = Modifier.clickable {
-                        localUriHandler.openUri("https://www.privacyguides.org/donate")
-                    },
-                    headlineContent = { Text(stringResource(R.string.donation_setting_name)) },
-                    supportingContent = { Text(stringResource(R.string.donation_setting_description)) },
-                    trailingContent = {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
-                    },
-                )
-                ListItem(
-                    modifier = Modifier.clickable {
-                        localUriHandler.openUri("https://github.com/privacyguides/verified-apps-android")
-                    },
-                    headlineContent = { Text(stringResource(R.string.view_source_code_setting_name)) },
-                    supportingContent = { Text(stringResource(R.string.view_source_code_setting_description)) },
-                    trailingContent = {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
-                    },
-                )
-                ListItem(
-                    modifier = Modifier.clickable(onClick = onLicenseIconButtonClicked),
-                    headlineContent = { Text(stringResource(R.string.license_setting_name)) },
-                    supportingContent = { Text(stringResource(R.string.license_setting_description)) },
-                    trailingContent = {
-                        Icon(Icons.Filled.Info, contentDescription = null)
-                    },
-                )
-                ListItem(
-                    modifier = Modifier.clickable(onClick = onPrivacyPolicyIconButtonClicked),
-                    headlineContent = { Text(stringResource(R.string.privacy_policy_setting_name)) },
-                    supportingContent = { Text(stringResource(R.string.privacy_policy_setting_description)) },
-                    trailingContent = {
-                        Icon(Icons.Filled.Info, contentDescription = null)
-                    },
-                )
-                ListItem(
-                    modifier = Modifier.clickable(onClick = onCreditsIconButtonClicked),
-                    headlineContent = { Text(stringResource(R.string.credits_setting_name)) },
-                    supportingContent = { Text(stringResource(R.string.credits_setting_description)) },
-                    trailingContent = {
-                        Icon(Icons.Filled.Info, contentDescription = null)
                     },
                 )
             }
