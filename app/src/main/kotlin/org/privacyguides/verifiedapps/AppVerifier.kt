@@ -192,10 +192,6 @@ fun AppVerifierApp(
                         verifyAppViewModel.setAppIcon(icon)
                         navController.navigate(AppVerifierScreens.VerifyApp.name)
                     },
-                    onAppListLaunchedEffect = {
-                        verifyAppViewModel.clearUiState()
-                        searchQuery = ""
-                    },
                     onQueryChange = { searchQuery = it },
                     onSearch = { },
                     onSearchActiveChange = { },

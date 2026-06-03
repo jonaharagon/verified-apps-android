@@ -32,7 +32,6 @@ fun MainTabsScreen(
         icon: Drawable,
         internalDatabaseInfo: InternalDatabaseInfo,
     ) -> Unit,
-    onAppListLaunchedEffect: () -> Unit,
     onQueryChange: (query: String) -> Unit,
     onSearch: (query: String) -> Unit,
     onSearchActiveChange: (active: Boolean) -> Unit,
@@ -59,7 +58,6 @@ fun MainTabsScreen(
             BottomNavPage.AppList -> AppListScreen(
                 searchQuery = searchQuery,
                 onClickAppItem = onAppListItemClick,
-                onLaunchedEffect = onAppListLaunchedEffect,
                 onQueryChange = onQueryChange,
                 onSearch = onSearch,
                 onSearchActiveChange = onSearchActiveChange,

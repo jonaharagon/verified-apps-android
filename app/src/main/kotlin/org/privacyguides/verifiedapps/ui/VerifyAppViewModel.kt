@@ -162,7 +162,4 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun clearUiState() {
-        _uiState.value = VerifyAppUiState()
-    }
 }

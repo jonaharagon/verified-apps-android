@@ -90,7 +90,6 @@ fun AppListScreen(
         icon: Drawable,
         internalDatabaseInfo: InternalDatabaseInfo,
     ) -> Unit,
-    onLaunchedEffect: () -> Unit,
     onQueryChange: (query: String) -> Unit,
     onSearch: (query: String) -> Unit,
     onSearchActiveChange: (active: Boolean) -> Unit,
@@ -190,10 +189,6 @@ fun AppListScreen(
         allEntries
             .filter { it.matchesStatusFilters(statusFilterMask) && it.matchesSearch(searchQuery) }
             .sortedWith { a, b -> compareAppListEntries(a, b, sortOrder) }
-    }
-
-    LaunchedEffect(key1 = Unit) {
-        onLaunchedEffect()
     }
 
     Scaffold(
