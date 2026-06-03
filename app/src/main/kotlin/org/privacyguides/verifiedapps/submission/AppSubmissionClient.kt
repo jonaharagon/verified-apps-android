@@ -2,6 +2,7 @@ package org.privacyguides.verifiedapps.submission
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
