@@ -493,6 +493,20 @@ val internalVerificationInfoDatabase = setOf(
         )
     ),
     InternalDatabaseVerificationInfo(
+        "ch.coredump.watertemp.zh",
+        listOf(
+            Hashes(
+                listOf(
+                    Source.FDROID_IZZYONDROID
+                ),
+                listOf(
+                    "B9:A5:BC:C0:8A:FA:69:20:0A:A6:AA:84:B4:A0:3B:AC:8F:3A:63:C9:8C:86:A2:D4:CB:C8:26:A0:F7:3D:19:71"
+                ),
+                false
+            )
+        )
+    ),
+    InternalDatabaseVerificationInfo(
         "ch.protonmail.android",
         listOf(
             Hashes(
@@ -1636,6 +1650,20 @@ val internalVerificationInfoDatabase = setOf(
         )
     ),
     InternalDatabaseVerificationInfo(
+        "com.costco.app.android",
+        listOf(
+            Hashes(
+                listOf(
+                    Source.GOOGLE_PLAY_STORE
+                ),
+                listOf(
+                    "CE:C0:85:37:BE:51:51:90:57:59:A0:E0:30:16:69:58:2E:FF:8E:6B:98:B6:67:6B:BD:0A:65:4A:53:52:45:FC"
+                ),
+                false
+            )
+        )
+    ),
+    InternalDatabaseVerificationInfo(
         "com.cyb3rko.flashdim",
         listOf(
             Hashes(
@@ -2168,6 +2196,20 @@ val internalVerificationInfoDatabase = setOf(
         )
     ),
     InternalDatabaseVerificationInfo(
+        "com.firewalla.chancellor",
+        listOf(
+            Hashes(
+                listOf(
+                    Source.GOOGLE_PLAY_STORE
+                ),
+                listOf(
+                    "26:31:2B:03:E0:66:C8:C1:1C:AC:3E:87:CE:80:4A:01:5F:D3:DE:AC:72:79:F7:77:18:FF:F7:0E:F3:23:0A:6C"
+                ),
+                false
+            )
+        )
+    ),
+    InternalDatabaseVerificationInfo(
         "com.flauschcode.broccoli",
         listOf(
             Hashes(
@@ -2360,6 +2402,20 @@ val internalVerificationInfoDatabase = setOf(
                 ),
                 listOf(
                     "FA:91:BD:3A:8B:FA:2B:03:BD:A4:84:22:B2:38:D5:84:F2:39:21:15:4A:52:79:E7:21:F2:F9:0A:74:D3:88:06"
+                ),
+                false
+            )
+        )
+    ),
+    InternalDatabaseVerificationInfo(
+        "com.genius.android",
+        listOf(
+            Hashes(
+                listOf(
+                    Source.GOOGLE_PLAY_STORE
+                ),
+                listOf(
+                    "8C:DE:06:14:7A:50:84:F1:AE:C9:89:29:8E:78:85:74:D6:A3:41:BB:46:AD:10:8C:0E:D5:16:72:91:04:5C:55"
                 ),
                 false
             )
