@@ -677,8 +677,8 @@ fun CreditsScreen(onNavigateUp: () -> Unit) {
                         text = entry.license,
                     )
                 }
-            }
-            item {
+        }
+        item {
                 Spacer(Modifier.padding(WindowInsets.navigationBars.asPaddingValues()))
             }
         }

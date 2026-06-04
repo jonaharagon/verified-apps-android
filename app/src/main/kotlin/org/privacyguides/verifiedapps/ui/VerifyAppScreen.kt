@@ -12,7 +12,6 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,12 +24,10 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -41,14 +38,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
@@ -87,8 +80,6 @@ fun VerifyAppScreen(
 ) {
     val context = LocalContext.current
     val verticalScroll = rememberScrollState()
-    var showMoreInfoAboutInternalDatabaseStatusDialog by rememberSaveable { mutableStateOf(false) }
-
     LaunchedEffect(Unit) {
         if (hashes.hashes.isEmpty()) {
             onLaunchedEffectHashEmpty()
@@ -197,11 +188,7 @@ fun VerifyAppScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                showMoreInfoAboutInternalDatabaseStatusDialog = true
-                            },
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
@@ -223,14 +210,64 @@ fun VerifyAppScreen(
                             )
                         }
                     }
-                    val showGitHubSubmit = if (isSystemApp) {
-                        alwaysShowGitHubSubmit
-                    } else {
-                        databaseStatus == InternalDatabaseStatus.NOT_FOUND ||
-                            databaseStatus == InternalDatabaseStatus.NOMATCH ||
-                            alwaysShowGitHubSubmit
+                }
+            }
+
+            if (databaseStatus == InternalDatabaseStatus.MATCH) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(
+                            text = stringResource(databaseStatus.infoRes()),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Text(
+                            text = "The matched database entry for this app is from the following sources:",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Text(
+                            text = internalDatabaseInfo.sources.joinToString("\n") { it.displayName },
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            text = "This information can be useful if you distrust a specific source and want to make sure the app isn't from them.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                     }
-                    if (showGitHubSubmit) {
+                }
+            }
+
+            val showGitHubSubmit = if (isSystemApp) {
+                alwaysShowGitHubSubmit
+            } else {
+                databaseStatus == InternalDatabaseStatus.NOT_FOUND ||
+                    databaseStatus == InternalDatabaseStatus.NOMATCH ||
+                    alwaysShowGitHubSubmit
+            }
+            if (showGitHubSubmit) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
                         val clipboardManager = LocalClipboardManager.current
                         val verificationData =
                             GitHubAppSubmission.buildVerificationInfo(packageName, hashes)
@@ -324,59 +361,6 @@ fun VerifyAppScreen(
 
             Spacer(Modifier.padding(WindowInsets.navigationBars.asPaddingValues()))
         }
-    }
-
-    if (showMoreInfoAboutInternalDatabaseStatusDialog) {
-        AlertDialog(
-            onDismissRequest = { showMoreInfoAboutInternalDatabaseStatusDialog = false },
-            confirmButton = {
-                TextButton(
-                    { showMoreInfoAboutInternalDatabaseStatusDialog = false }
-                ) {
-                    Text(stringResource(id = android.R.string.ok))
-                }
-            },
-            title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = databaseStatus.statusIcon(),
-                        contentDescription = stringResource(databaseStatus.labelRes()),
-                        tint = databaseStatus.contentColor(),
-                        modifier = Modifier.size(28.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(databaseStatus.labelRes()),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = databaseStatus.contentColor(),
-                    )
-                }
-            },
-            text = {
-                LazyColumn {
-                    item {
-                        Text(stringResource(internalDatabaseInfo.internalDatabaseStatus.infoRes()))
-                    }
-                    item {
-                        if (internalDatabaseInfo.internalDatabaseStatus == InternalDatabaseStatus.MATCH) {
-                            Text("\nThe matched database entry for this app is from the following sources:\n")
-                            Text(
-                                text = internalDatabaseInfo.sources.joinToString("\n") { it.displayName },
-                                style = MaterialTheme.typography.headlineSmall,
-                            )
-                            Text(
-                                "\nThis information can be useful if you distrust a specific source and want to make" +
-                                        " sure the app isn't from them."
-                            )
-                        }
-                    }
-                }
-            }
-        )
     }
 }
 
