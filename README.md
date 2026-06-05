@@ -2,7 +2,7 @@
 
 Verified Apps is an app signing certificate hash viewer and verifier. It checks apps against a built-in database of known-good app signing fingerprints.
 
-You can share or copy verification info for use outside the app. If an app is not in the database, you'll have the option to open a pre-filled [GitHub submission issue](https://github.com/privacyguides/verified-apps/issues/new?template=app-submission.yml) in your browser.
+You can share or copy verification info for use outside the app. If an app is not in the database, you'll have the option to open a pre-filled [GitHub submission issue](https://github.com/privacyguides/verified-apps/issues/new?template=app-submission.yml) in your browser. We consider it extremely important for you to read this entire README file before using this app.
 
 ## Installation
 
@@ -18,20 +18,63 @@ org.privacyguides.verifiedapps
 40:5C:6B:D2:CA:7C:3A:AE:8F:46:3C:6F:8B:55:BC:F0:DD:AC:43:1C:5E:D8:EA:FF:65:D1:06:C9:81:7A:20:7F
 ```
 
-This app shouldn't/can't be used to verify itself. The easiest way to verify this app is with a trusted AppVerifier install.
+**This app shouldn't/can't be used to verify itself.** We do not recommend any specific way to verify the signing certificate of the APK file you've downloaded. However, many people use an AppVerifier install they trust to check the signatures of their APK files. Obtainium is another app which will display the signing certificate of apps it's downloaded.
 
 > [!TIP]
 > On GrapheneOS, the best way to achieve a trusted AppVerifier installation is to install Accrescent from the GrapheneOS App Store, then download AppVerifier from Accrescent.
 
-You can additionally (or alternatively) verify the APK you have downloaded to your desktop computer was built on GitHub with the `gh` command-line tool:
+You can additionally (or alternatively) verify the APK you have downloaded to your desktop computer was built by our automated workflows on GitHub with the `gh` command-line tool:
 
 ```
 gh attestation verify --owner privacyguides VerifiedApps.apk
 ```
 
+<details><summary>Example</summary>
+
+When you verify the provenance of our APK file with the `gh` CLI, you will see a result like the following. 
+
+> [!IMPORTANT]
+> - Pay attention to the build repo, it should match this GitHub repository.
+> - Pay attention to the build workflow, this is the workflow which built the APK file, which should generally be `release.yml` at the current tag number.
+> - Pay attention to the signer repo, this is always `privacyguides/.github` for every project we build on GitHub.
+> - Pay attention to the signer workflow, this is always our organization-wide `sign-artifact.yml` workflow.
+
+<pre>
+$ gh attestation verify --owner privacyguides VerifiedApps-26.6.1.apk 
+Loaded digest sha256:40cf304f43368ca1611138b88e253c7c01b521eb6781517329952bcb28c7f868 for file://VerifiedApps-26.6.1.apk
+Loaded 1 attestation from GitHub API
+
+The following policy criteria will be enforced:
+- Predicate type must match:................ https://slsa.dev/provenance/v1
+- Source Repository Owner URI must match:... https://github.com/privacyguides
+- Subject Alternative Name must match regex: (?i)^https://github.com/privacyguides/
+- OIDC Issuer must match:................... https://token.actions.githubusercontent.com
+
+✓ Verification succeeded!
+
+The following 1 attestation matched the policy criteria
+
+- Attestation #1
+  - Build repo:..... <mark>privacyguides/verified-apps-android</mark>
+  - Build workflow:. .github/workflows/<mark>release.yml@refs/tags/26.6.1</mark>
+  - Signer repo:.... <mark>privacyguides/.github</mark>
+  - Signer workflow: .github/workflows/<mark>sign-artifact.yml</mark>@5c41b37a937aab5e50262f3ab672fc9b9438dbf9
+</pre>
+
+</details>
+
 ## What is this?
 
 This is a fork of [AppVerifier](https://github.com/soupslurpr/AppVerifier), but many components have been removed, so it no longer serves the same purpose. Notably, it no longer includes peer-to-peer verification via clipboard sharing. This app **only** checks apps against our crowdsourced database.
+
+### App verifications & reliability
+
+> [!IMPORTANT]
+> We maintain and release this app and our dataset in good faith and on a best-effort basis. We are not committing to 100% security, immediate bug fixes, or comprehensive app coverage in our dataset. As always, you must consider your own threat model
+
+Please note that **mismatch** results may not always indicate an illegitimate app. For example, if we only have the F-Droid version of an app in our database, and you downloaded the app from Google Play where Google signed it with their own certificate, then your app would not match our database and will be flagged.
+
+When you find a mismatch, we **always** recommend submitting that app information to our issue tracker, you will be prompted to do so within the app. We will work to verify the legitimacy of your submission. If the app you have is indeed legitimate, we will include it in the next app release. If the app you have is illegitimate, we will inform you in the submitted issue.
 
 ### What this app is good for
 

@@ -111,7 +111,7 @@ jobs:
       artifact-path: ${{ needs.build.outputs.path }}
 
   release:
-    needs: attest
+    needs: [build, attest]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -127,6 +127,6 @@ jobs:
         id: release
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd
         with:
-          artifacts: "data.yml"
+          artifacts: ${{ needs.build.outputs.path }}
           draft: true
           prerelease: true
