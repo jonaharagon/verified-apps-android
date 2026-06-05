@@ -1,0 +1,1 @@
+An app signing certificate hash verifier based on a crowdsourced dataset.
