@@ -86,13 +86,9 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun getInternalDatabaseInfoFromVerificationInfo(verificationInfo: VerificationInfo): InternalDatabaseInfo {
         return internalVerificationInfoDatabase.run {
-            val packageNameMatchedInternalDatabaseVerificationInfo = try {
-                this.first {
-                    it.packageName == verificationInfo.packageName
-                }
-            } catch (e: NoSuchElementException) {
-                return@run InternalDatabaseInfo(InternalDatabaseStatus.NOT_FOUND, listOf(Source.NONE))
-            }
+            val packageNameMatchedInternalDatabaseVerificationInfo = this.firstOrNull {
+                it.packageName == verificationInfo.packageName
+            } ?: return@run InternalDatabaseInfo(InternalDatabaseStatus.NOT_FOUND, listOf(Source.NONE))
 
             val maybeMatchedHashes = packageNameMatchedInternalDatabaseVerificationInfo.hashesList.find {
                 it.matchesSigningFingerprints(verificationInfo.hashes)

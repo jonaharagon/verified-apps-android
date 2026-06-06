@@ -64,6 +64,10 @@
     <string name="internal_database_status_not_found_info">This app was not found in our internal database.</string>
     <string name="internal_database_status_match_info">This app\'s verification info matches an entry in the internal database.</string>
     <string name="internal_database_status_nomatch_info">This app was found in the internal database, but its hash did not match. This app may be non-genuine.</string>
+    <string name="apk_failed_to_parse_title">APK failed to parse</string>
+    <string name="apk_failed_to_parse_message">Make sure you provided a valid APK file.</string>
+    <string name="internal_database_sources_label">The matched database entry for this app is from the following sources:</string>
+    <string name="internal_database_sources_explanation">This information can be useful if you distrust a specific source and want to make sure the app isn\'t from them.</string>
     <string name="visit_privacy_guides_setting_name">Visit Privacy Guides</string>
     <string name="visit_privacy_guides_setting_description">Learn more at privacyguides.org in your web browser</string>
     <string name="donation">Donation</string>
@@ -72,6 +76,7 @@
     <string name="database_setting_name">Database</string>
     <string name="database_setting_description">View the crowdsourced database repository on the GitHub website in your web browser</string>
     <string name="advanced">Advanced</string>
+    <string name="has_multiple_signers_debug">hasMultipleSigners: %1$s</string>
     <string name="show_hasmultiplesigners_setting_name">Show hasMultipleSigners</string>
     <string name="show_hasmultiplesigners_setting_description">"Shows hasMultipleSigners in the app verification screen. This is useful for contributing to the internal verification info database."</string>
     <string name="show_sharing_tools_setting_name">Show sharing tools</string>
@@ -82,6 +87,7 @@
     <string name="submit_to_codeberg">Submit on Codeberg</string>
     <string name="verification_info_copied_toast">Copied Verification Info to Clipboard</string>
     <string name="codeberg_submission_no_browser">No browser found to open the Codeberg submission page.</string>
+    <string name="github_submission_no_browser">No browser found to open the GitHub submission page.</string>
     <string name="always_show_github_submit_setting_name">Always show submission buttons</string>
     <string name="always_show_github_submit_setting_description">Shows the Submit on GitHub button even when the app is already in the internal database</string>
     <string name="show_codeberg_submit_setting_name">Show Submit on Codeberg</string>

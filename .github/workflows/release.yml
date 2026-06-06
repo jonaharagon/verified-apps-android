@@ -41,6 +41,8 @@ jobs:
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       - name: Verify version matches tag
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
           GRADLE_VERSION=$(awk '
             /releaseVersionYear =/{ y=$NF }
@@ -48,7 +50,6 @@ jobs:
             /releaseVersionPatch =/{ p=$NF; sub(/,.*/, "", p) }
             END { printf "%d.%d.%d", y, m, p }
           ' app/build.gradle.kts)
-          TAG="${{ github.ref_name }}"
           if [ "$GRADLE_VERSION" != "$TAG" ]; then
             echo "::error::Version mismatch: app/build.gradle.kts is ${GRADLE_VERSION}, but release tag is ${TAG}."
             exit 1
@@ -78,6 +79,8 @@ jobs:
 
       - name: Package release APK
         id: apk
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
           UNSIGNED="app/build/outputs/apk/release/app-release-unsigned.apk"
           SIGNED="app/build/outputs/apk/release/app-release.apk"
@@ -95,8 +98,8 @@ jobs:
             echo "::error::APK Signature Scheme v4 sidecar (.idsig) not found. Ensure enableV4Signing = true in the release signing config."
             exit 1
           fi
-          APK_ASSET="VerifiedApps-${{ github.ref_name }}.apk"
-          IDSIG_ASSET="VerifiedApps-${{ github.ref_name }}.apk.idsig"
+          APK_ASSET="VerifiedApps-${TAG}.apk"
+          IDSIG_ASSET="VerifiedApps-${TAG}.apk.idsig"
           cp "$APK" "$APK_ASSET"
           cp "$IDSIG_SRC" "$IDSIG_ASSET"
           echo "path=${APK_ASSET}" >> "$GITHUB_OUTPUT"

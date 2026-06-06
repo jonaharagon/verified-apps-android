@@ -37,11 +37,11 @@ fun defaultStatusFilterMask(): Int =
 fun statusFilterBit(filter: AppListFilter): Int = 1 shl filter.ordinal
 
 fun isStatusFilterSelected(mask: Int, filter: AppListFilter): Boolean =
-    mask and statusFilterBit(filter) != 0
+    (mask and statusFilterBit(filter)) != 0
 
 fun toggleStatusFilter(mask: Int, filter: AppListFilter): Int {
     val bit = statusFilterBit(filter)
-    return if (mask and bit != 0) {
+    return if ((mask and bit) != 0) {
         mask and bit.inv()
     } else {
         mask or bit

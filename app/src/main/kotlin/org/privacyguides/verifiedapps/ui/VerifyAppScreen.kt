@@ -123,12 +123,12 @@ fun VerifyAppScreen(
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        "APK failed to parse",
+                        stringResource(R.string.apk_failed_to_parse_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                     )
                     Text(
-                        "Make sure you provided a valid APK file.",
+                        stringResource(R.string.apk_failed_to_parse_message),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                     )
                 }
@@ -168,7 +168,10 @@ fun VerifyAppScreen(
                     )
                     if (showHasMultipleSigners) {
                         Text(
-                            text = "hasMultipleSigners: ${hashes.hasMultipleSigners}",
+                            text = stringResource(
+                                R.string.has_multiple_signers_debug,
+                                hashes.hasMultipleSigners,
+                            ),
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
@@ -234,7 +237,7 @@ fun VerifyAppScreen(
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Text(
-                            text = "The matched database entry for this app is from the following sources:",
+                            text = stringResource(R.string.internal_database_sources_label),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Text(
@@ -242,7 +245,7 @@ fun VerifyAppScreen(
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
-                            text = "This information can be useful if you distrust a specific source and want to make sure the app isn't from them.",
+                            text = stringResource(R.string.internal_database_sources_explanation),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -389,7 +392,7 @@ private fun openGitHubSubmission(context: android.content.Context, issueUri: Uri
     } catch (_: ActivityNotFoundException) {
         Toast.makeText(
             context,
-            "No browser found to open the GitHub submission page.",
+            context.getString(R.string.github_submission_no_browser),
             Toast.LENGTH_LONG,
         ).show()
     }
