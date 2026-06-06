@@ -25,3 +25,8 @@ updates:
       actions:
         patterns:
           - "*"
+    ignore:
+      # Internal reusable workflow with no release tags to anchor to; without a
+      # version, Dependabot follows commits (dependabot-core#13466). Bump its
+      # pinned SHA manually when privacyguides/.github changes.
+      - dependency-name: "privacyguides/.github/.github/workflows/sign-artifact.yml"
