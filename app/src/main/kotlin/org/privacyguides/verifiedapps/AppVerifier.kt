@@ -251,18 +251,18 @@ fun AppVerifierApp(
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.VerifyApp) {
                 VerifyAppScreen(
                     onNavigateUp = { navController.navigateUp() },
-                    verifyAppUiState.value.icon.value,
-                    verifyAppUiState.value.name.value,
-                    verifyAppUiState.value.packageName.value,
-                    verifyAppUiState.value.hashes.value,
+                    verifyAppUiState.value.icon,
+                    verifyAppUiState.value.name,
+                    verifyAppUiState.value.packageName,
+                    verifyAppUiState.value.hashes,
                     { navController.navigateUp() },
-                    verifyAppUiState.value.internalDatabaseInfo.value,
-                    verifyAppUiState.value.apkFailedToParse.value,
+                    verifyAppUiState.value.internalDatabaseInfo,
+                    verifyAppUiState.value.apkFailedToParse,
                     preferencesUiState.value.showHasMultipleSigners.second.value,
                     preferencesUiState.value.showSharingTools.second.value,
                     preferencesUiState.value.alwaysShowGitHubSubmit.second.value,
                     preferencesUiState.value.showCodebergSubmit.second.value,
-                    verifyAppUiState.value.isSystemApp.value,
+                    verifyAppUiState.value.isSystemApp,
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.License) {

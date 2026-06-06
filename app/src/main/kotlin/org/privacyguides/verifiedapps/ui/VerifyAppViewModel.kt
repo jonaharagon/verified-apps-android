@@ -18,6 +18,7 @@ import org.privacyguides.verifiedapps.internalVerificationInfoDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
@@ -34,24 +35,31 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
         internalDatabaseInfo: InternalDatabaseInfo,
         isSystemApp: Boolean = false,
     ) {
-        _uiState.value.name.value = name
-        _uiState.value.packageName.value = packageName
-        _uiState.value.hashes.value = hashes
-        _uiState.value.internalDatabaseInfo.value = internalDatabaseInfo
-        _uiState.value.isSystemApp.value = isSystemApp
+        _uiState.update {
+            it.copy(
+                name = name,
+                packageName = packageName,
+                hashes = hashes,
+                internalDatabaseInfo = internalDatabaseInfo,
+                isSystemApp = isSystemApp,
+            )
+        }
     }
 
     fun setAppIcon(icon: Drawable) {
-        _uiState.value.icon.value = icon
+        _uiState.update { it.copy(icon = icon) }
     }
 
-    fun setSearchQuery(query: String): Unit {
-        uiState.value.searchQuery.value = query
+    fun setSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
     }
 
     fun getHashesFromPackageInfo(packageInfo: PackageInfo): Hashes {
         val signingInfo = packageInfo.signingInfo
-        val hasMultipleSigners = signingInfo!!.hasMultipleSigners()
+            ?: throw IllegalStateException(
+                "PackageInfo.signingInfo is null for package ${packageInfo.packageName}"
+            )
+        val hasMultipleSigners = signingInfo.hasMultipleSigners()
 
         val signatures = if (hasMultipleSigners) {
             signingInfo.apkContentsSigners
@@ -81,7 +89,7 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun setApkFailedToParse(b: Boolean) {
-        _uiState.value.apkFailedToParse.value = b
+        _uiState.update { it.copy(apkFailedToParse = b) }
     }
 
     fun getInternalDatabaseInfoFromVerificationInfo(verificationInfo: VerificationInfo): InternalDatabaseInfo {
@@ -107,10 +115,14 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
         packageManager: PackageManager,
     ) {
         contentResolver.openInputStream(uri).use { inputStream ->
-            val tempFile = File.createTempFile("temp", null, getApplication<Application>().cacheDir)
+            // Use a deterministic cache file rather than File.createTempFile(): getPackageArchiveInfo()
+            // needs a real path (there's no streaming API), and a fixed name gives predictable cleanup.
+            val tempFile = File(getApplication<Application>().cacheDir, "pending-verification.apk")
 
             tempFile.outputStream().use { fileOut ->
-                inputStream.use { it!!.copyTo(fileOut) }
+                val nonNullInputStream = inputStream
+                    ?: throw IOException("Unable to open input stream for URI: $uri")
+                nonNullInputStream.use { it.copyTo(fileOut) }
             }
 
             val packageInfo = packageManager.getPackageArchiveInfo(
@@ -121,16 +133,7 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
 
             if (packageInfo == null) {
                 setApkFailedToParse(true)
-
-                val isFileDeleted = tempFile.delete()
-
-                if (!isFileDeleted) {
-                    throw IOException(
-                        "Temporary APK file couldn't be deleted! Report this bug please with instructions " +
-                                "on how to reproduce!"
-                    )
-                }
-
+                deleteTempFileOrThrow(tempFile)
                 return
             }
 
@@ -150,14 +153,18 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
             )
             setAppIcon(packageManager.getApplicationIcon(applicationInfo))
 
-            val isFileDeleted = tempFile.delete()
+            deleteTempFileOrThrow(tempFile)
+        }
+    }
 
-            if (!isFileDeleted) {
-                throw IOException(
-                    "Temporary APK file couldn't be deleted! Report this bug please with instructions " +
-                            "on how to reproduce!"
-                )
-            }
+    private fun deleteTempFileOrThrow(tempFile: File) {
+        val isFileDeleted = tempFile.delete()
+
+        if (!isFileDeleted) {
+            throw IOException(
+                "Temporary APK file couldn't be deleted! Report this bug please with instructions " +
+                        "on how to reproduce!"
+            )
         }
     }
 }

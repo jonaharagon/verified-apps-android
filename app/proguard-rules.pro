@@ -19,3 +19,17 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Strip all android.util.Log calls from the release build (app + bundled
+# libraries). proguard-android-optimize.txt enables the optimization pass that
+# acts on -assumenosideeffects, so R8 removes these calls entirely. Keeps
+# information out of logcat (defense in depth for a privacy app) and clears
+# MobSF's android_logging finding.
+-assumenosideeffects class android.util.Log {
+    public static *** v(...);
+    public static *** d(...);
+    public static *** i(...);
+    public static *** w(...);
+    public static *** e(...);
+    public static *** wtf(...);
+}
