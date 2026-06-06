@@ -36,7 +36,7 @@ android {
 
     defaultConfig {
         applicationId = "org.privacyguides.verifiedapps"
-        minSdk = 28
+        minSdk = 34
         targetSdk = 36
         // CalVer YY.MM.PATCH (e.g. 26.6.0). versionCode = YY*1_000_000 + MM*10_000 + PATCH.
         val releaseVersionYear = 26
