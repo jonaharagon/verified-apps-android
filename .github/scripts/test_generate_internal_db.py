@@ -18,6 +18,22 @@ class SourceNameToEnumTests(unittest.TestCase):
         self.assertTrue(gen.source_name_to_enum("4chan").startswith("SOURCE_"))
 
 
+class KotlinStringEscapeTests(unittest.TestCase):
+    def test_escapes_dollar_to_block_string_templates(self):
+        self.assertEqual(
+            gen.kotlin_string_escape("${System.exit(0)}"),
+            "\\${System.exit(0)}",
+        )
+
+    def test_escapes_newline(self):
+        self.assertEqual(gen.kotlin_string_escape('a"\nb'), 'a\\"\\nb')
+
+    def test_source_enum_display_name_is_escaped(self):
+        enum_block = gen.format_source_enum({"${evil}": "EVIL"})
+        self.assertIn('EVIL("\\${evil}")', enum_block)
+        self.assertNotIn('EVIL("${evil}")', enum_block)
+
+
 class ValidationTests(unittest.TestCase):
     def test_accepts_valid_fingerprint(self):
         gen.validate_fingerprint("06:7A:40:C4:19")  # does not raise
