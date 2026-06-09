@@ -179,8 +179,11 @@ def format_entry(package: str, signatures: list, display_to_enum: dict[str, str]
         if not raw_fingerprint:
             continue
 
+        # Canonicalize to upper-case hex: fingerprints are case-insensitive, and the
+        # app compares them against its own upper-case SHA-256 output, so emitting a
+        # consistent case keeps a lower-case source entry from causing a false mismatch.
         fingerprints = [
-            line.strip()
+            line.strip().upper()
             for line in raw_fingerprint.splitlines()
             if line.strip()
         ]

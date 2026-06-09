@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The app makes no network requests of its own: submission links and the
+  donate/website buttons are handed off to the system browser, which runs in
+  its own process under its own network policy. Disabling cleartext globally is
+  defense-in-depth so that no current or future transitive dependency can
+  silently send plaintext HTTP from within this app's process.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

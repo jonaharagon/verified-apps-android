@@ -40,7 +40,13 @@ data class Hashes(
         if (hasMultipleSigners != other.hasMultipleSigners) {
             return false
         }
-        return hashes.toSet() == other.hashes.toSet()
+        // Compare as a case-insensitive set. SHA-256 hex fingerprints are
+        // case-insensitive by definition, so canonicalizing here keeps a casing
+        // drift in the bundled database from ever producing a false mismatch. It
+        // can never produce a false match: this is still exact per-fingerprint
+        // hex equality, just normalized.
+        return hashes.mapTo(HashSet()) { it.uppercase() } ==
+            other.hashes.mapTo(HashSet()) { it.uppercase() }
     }
 }
 

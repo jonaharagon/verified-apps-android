@@ -67,6 +67,15 @@ class FormatEntryTests(unittest.TestCase):
             gen.format_entry("com.example.app", [self._sig("")], self.DISPLAY_TO_ENUM)
         )
 
+    def test_canonicalizes_fingerprint_to_uppercase(self):
+        entry = gen.format_entry(
+            "com.example.app",
+            [self._sig("aa:bb:cc")],
+            self.DISPLAY_TO_ENUM,
+        )
+        self.assertIn('"AA:BB:CC"', entry)
+        self.assertNotIn("aa:bb:cc", entry)
+
 
 if __name__ == "__main__":
     unittest.main()

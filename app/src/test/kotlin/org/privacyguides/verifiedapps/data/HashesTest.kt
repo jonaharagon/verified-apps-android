@@ -45,4 +45,18 @@ class HashesTest {
             hashes(emptyList()).matchesSigningFingerprints(hashes(listOf("A"))),
         )
     }
+
+    @Test
+    fun matches_whenFingerprintsDifferOnlyInCase() {
+        assertTrue(
+            hashes(listOf("aa:bb:cc")).matchesSigningFingerprints(hashes(listOf("AA:BB:CC"))),
+        )
+    }
+
+    @Test
+    fun doesNotMatch_whenFingerprintsDifferBeyondCase() {
+        assertFalse(
+            hashes(listOf("aa:bb:cc")).matchesSigningFingerprints(hashes(listOf("AA:BB:CD"))),
+        )
+    }
 }

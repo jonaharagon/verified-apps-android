@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.security.MessageDigest
 import java.util.UUID
 
@@ -99,9 +101,13 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
                 "pending-verification-${UUID.randomUUID()}.apk"
             )
             try {
+                // The URI comes from another app via the exported SEND/VIEW intents, so
+                // the stream behind it is untrusted: copy it with a hard size ceiling so a
+                // malicious or unbounded content provider cannot fill the device's storage.
                 val copied = contentResolver.openInputStream(uri)?.use { input ->
-                    tempFile.outputStream().use { output -> input.copyTo(output) }
-                    true
+                    tempFile.outputStream().use { output ->
+                        input.copyBounded(output, MAX_APK_BYTES)
+                    }
                 } ?: false
                 if (!copied) {
                     setApkFailedToParse(true)
@@ -139,6 +145,29 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
                 tempFile.delete()
             }
         }
+    }
+}
+
+/**
+ * Upper bound on the bytes copied from an incoming APK URI. Comfortably larger than any
+ * real monolithic APK a user would verify, but finite so an unbounded/hostile stream from
+ * another app cannot exhaust storage. Exceeding it is surfaced as a parse failure.
+ */
+private const val MAX_APK_BYTES = 4L * 1024 * 1024 * 1024 // 4 GiB
+
+/**
+ * Copy this stream to [output], stopping and returning false if more than [maxBytes] would
+ * be written. Returns true once the source is fully copied within the limit.
+ */
+private fun InputStream.copyBounded(output: OutputStream, maxBytes: Long): Boolean {
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    var total = 0L
+    while (true) {
+        val read = read(buffer)
+        if (read < 0) return true
+        total += read
+        if (total > maxBytes) return false
+        output.write(buffer, 0, read)
     }
 }
 
