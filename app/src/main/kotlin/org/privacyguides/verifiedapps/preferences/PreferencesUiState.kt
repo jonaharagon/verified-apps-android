@@ -19,6 +19,9 @@ data class PreferencesUiState(
     /** Whether to show the Codeberg submission button on the verify app screen. */
     val showCodebergSubmit: Boolean = false,
 
+    /** Whether to show the verify from clipboard tools on the verify app screen. */
+    val showVerifyFromClipboard: Boolean = false,
+
     /** Whether to include system apps in the app list. */
     val showSystemApps: Boolean = false,
 
@@ -33,6 +36,7 @@ data class PreferencesUiState(
         val SHOW_SHARING_TOOLS = booleanPreferencesKey("SHOW_SHARING_TOOLS")
         val ALWAYS_SHOW_GITHUB_SUBMIT = booleanPreferencesKey("ALWAYS_SHOW_GITHUB_SUBMIT")
         val SHOW_CODEBERG_SUBMIT = booleanPreferencesKey("SHOW_CODEBERG_SUBMIT")
+        val SHOW_VERIFY_FROM_CLIPBOARD = booleanPreferencesKey("SHOW_VERIFY_FROM_CLIPBOARD")
         val SHOW_SYSTEM_APPS = booleanPreferencesKey("SHOW_SYSTEM_APPS")
         val DYNAMIC_COLOR = booleanPreferencesKey("DYNAMIC_COLOR")
         val PITCH_BLACK_BACKGROUND = booleanPreferencesKey("PITCH_BLACK_BACKGROUND")

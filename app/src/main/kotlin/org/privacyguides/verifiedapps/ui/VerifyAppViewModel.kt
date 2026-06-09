@@ -13,6 +13,7 @@ import org.privacyguides.verifiedapps.Source
 import org.privacyguides.verifiedapps.data.Hashes
 import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
 import org.privacyguides.verifiedapps.data.VerificationInfo
+import org.privacyguides.verifiedapps.data.VerificationStatus
 import org.privacyguides.verifiedapps.data.VerifyAppUiState
 import org.privacyguides.verifiedapps.internalDatabaseInfoFor
 import kotlinx.coroutines.Dispatchers
@@ -45,15 +46,115 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
                 hashes = hashes,
                 internalDatabaseInfo = internalDatabaseInfo,
                 isSystemApp = isSystemApp,
-                // Clear any stale parse failure from a previous verification; this
-                // ViewModel is activity-scoped and reused across verifications.
+                // Clear any stale parse failure or verification status from a previous
+                // verification; this ViewModel is activity-scoped and reused across
+                // verifications.
                 apkFailedToParse = false,
+                verificationStatus = VerificationStatus.UNKNOWN,
             )
         }
     }
 
     fun setAppIcon(icon: Drawable) {
         _uiState.update { it.copy(icon = icon) }
+    }
+
+    fun verifyFromText(text: String) {
+        _uiState.update { it.copy(verificationStatus = parseTextToVerificationStatus(text)) }
+    }
+
+    fun getVerificationInfoText(text: String): String {
+        val trimmedText = text.trim().trim('"').lines().joinToString("") { it.trim().plus('\n') }
+
+        return if (trimmedText.contains('"')) {
+            trimmedText
+                .lines()
+                .dropLast(2)
+                .joinToString("") {
+                    it
+                        .trim()
+                        .replace(
+                            ' ',
+                            '\n'
+                        )
+                        .trim('"')
+                        .plus('\n')
+                }
+        } else if (trimmedText.contains(' ')) {
+            trimmedText
+                .lines()
+                .joinToString("") {
+                    it
+                        .trim()
+                        .replace(
+                            ' ',
+                            '\n'
+                        )
+                        .plus('\n')
+                }
+        } else {
+            trimmedText
+        }
+    }
+
+    private fun parseTextToVerificationStatus(text: String): VerificationStatus {
+        fun parseVerificationInfoTextToVerificationStatus(verificationInfoText: String): VerificationStatus {
+            if (!uiState.value.hashes.hasMultipleSigners) {
+                if (
+                    (uiState.value.hashes.hashes.last() == verificationInfoText.lines()[0])
+                    || (verificationInfoText.lines()[0].trim().iterator().run {
+                        var convertedHash = ""
+                        this.withIndex().forEach {
+                            convertedHash += it.value
+                            if (it.index % 2 != 0 && (it.index != verificationInfoText.lines()[0].trim().length.dec())) {
+                                convertedHash += ":"
+                            }
+                        }
+                        uiState.value.hashes.hashes.last() == convertedHash.uppercase()
+                    })
+                    || uiState.value.hashes.hashes.last() ==
+                        verificationInfoText.lines()[0].trim() + ":" + verificationInfoText.lines()[1].trim()
+                ) {
+                    return VerificationStatus.PKG_NOT_GIVEN_BUT_SIG_HASH_MATCH
+                } else if (verificationInfoText.lines()[0].length == 95) {
+                    return VerificationStatus.PKG_NOT_GIVEN_AND_SIG_HASH_NOMATCH
+                }
+            } else if (uiState.value.hashes.hashes == verificationInfoText.lines()) {
+                return VerificationStatus.PKG_NOT_GIVEN_BUT_SIG_HASH_MATCH
+            }
+
+            val isPackageNameMatch = verificationInfoText.lines()[0] == uiState.value.packageName
+            val verificationStatus = if (uiState.value.hashes.hasMultipleSigners) {
+                if (verificationInfoText.lines().drop(1) == uiState.value.hashes.hashes) {
+                    VerificationStatus.MATCH
+                } else {
+                    VerificationStatus.NOMATCH
+                }
+            } else if (verificationInfoText.lines().drop(1).any {
+                    uiState.value.hashes.hashes.last() == it
+                }) {
+                VerificationStatus.MATCH
+            } else {
+                VerificationStatus.NOMATCH
+            }
+
+            return if (isPackageNameMatch && (verificationStatus.ordinal == VerificationStatus.NOMATCH.ordinal)) {
+                VerificationStatus.PKG_MATCH_BUT_SIG_HASH_NOMATCH
+            } else if (!isPackageNameMatch && (verificationStatus.ordinal == VerificationStatus.MATCH.ordinal)) {
+                VerificationStatus.PKG_NOMATCH_BUT_SIG_HASH_MATCH
+            } else if (verificationStatus.ordinal == VerificationStatus.NOMATCH.ordinal) {
+                VerificationStatus.NOMATCH
+            } else if (verificationStatus.ordinal == VerificationStatus.MATCH.ordinal) {
+                VerificationStatus.MATCH
+            } else {
+                TODO(
+                    "This should never happen. If it does, then make sure you accounted for any new verification " +
+                            "statuses that can happen in this function."
+                )
+            }
+        }
+
+        return parseVerificationInfoTextToVerificationStatus(getVerificationInfoText(text))
     }
 
     fun getHashesFromPackageInfo(packageInfo: PackageInfo): Hashes {
