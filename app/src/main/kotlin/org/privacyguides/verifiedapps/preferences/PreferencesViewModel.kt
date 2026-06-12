@@ -34,6 +34,7 @@ class PreferencesViewModel(private val dataStore: DataStore<Preferences>) : View
                     showSharingTools = settings[Keys.SHOW_SHARING_TOOLS] ?: false,
                     alwaysShowGitHubSubmit = settings[Keys.ALWAYS_SHOW_GITHUB_SUBMIT] ?: false,
                     showCodebergSubmit = settings[Keys.SHOW_CODEBERG_SUBMIT] ?: false,
+                    showVerifyFromClipboard = settings[Keys.SHOW_VERIFY_FROM_CLIPBOARD] ?: false,
                     showSystemApps = settings[Keys.SHOW_SYSTEM_APPS] ?: false,
                     dynamicColor = settings[Keys.DYNAMIC_COLOR] ?: false,
                     pitchBlackBackground = settings[Keys.PITCH_BLACK_BACKGROUND] ?: false,
@@ -57,6 +58,7 @@ class PreferencesViewModel(private val dataStore: DataStore<Preferences>) : View
                 Keys.SHOW_SHARING_TOOLS -> state.copy(showSharingTools = value)
                 Keys.ALWAYS_SHOW_GITHUB_SUBMIT -> state.copy(alwaysShowGitHubSubmit = value)
                 Keys.SHOW_CODEBERG_SUBMIT -> state.copy(showCodebergSubmit = value)
+                Keys.SHOW_VERIFY_FROM_CLIPBOARD -> state.copy(showVerifyFromClipboard = value)
                 Keys.SHOW_SYSTEM_APPS -> state.copy(showSystemApps = value)
                 Keys.DYNAMIC_COLOR -> state.copy(dynamicColor = value)
                 Keys.PITCH_BLACK_BACKGROUND -> state.copy(pitchBlackBackground = value)

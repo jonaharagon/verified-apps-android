@@ -1,6 +1,7 @@
 package org.privacyguides.verifiedapps
 
 import android.graphics.drawable.Drawable
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -262,6 +263,12 @@ fun AppVerifierApp(
                     preferencesUiState.value.alwaysShowGitHubSubmit,
                     preferencesUiState.value.showCodebergSubmit,
                     verifyAppUiState.value.isSystemApp,
+                    verifyAppUiState.value.verificationStatus,
+                    { verifyAppViewModel.verifyFromText(it) },
+                    {
+                        Toast.makeText(context, "Clipboard is empty!", Toast.LENGTH_SHORT).show()
+                    },
+                    preferencesUiState.value.showVerifyFromClipboard,
                 )
             }
             composableWithDefaultSlideTransitions(route = AppVerifierScreens.License) {

@@ -230,6 +230,27 @@ fun SettingsScreen(
                 )
                 ListItem(
                     modifier = Modifier.toggleable(
+                        value = preferencesUiState.showVerifyFromClipboard,
+                        onValueChange = {
+                            coroutineScope.launch {
+                                preferencesViewModel.setPreference(
+                                    PreferencesUiState.Keys.SHOW_VERIFY_FROM_CLIPBOARD,
+                                    it,
+                                )
+                            }
+                        },
+                    ),
+                    headlineContent = { Text(stringResource(R.string.show_verify_from_clipboard_setting_name)) },
+                    supportingContent = { Text(stringResource(R.string.show_verify_from_clipboard_setting_description)) },
+                    trailingContent = {
+                        Switch(
+                            checked = preferencesUiState.showVerifyFromClipboard,
+                            onCheckedChange = null,
+                        )
+                    },
+                )
+                ListItem(
+                    modifier = Modifier.toggleable(
                         value = preferencesUiState.alwaysShowGitHubSubmit,
                         onValueChange = {
                             coroutineScope.launch {

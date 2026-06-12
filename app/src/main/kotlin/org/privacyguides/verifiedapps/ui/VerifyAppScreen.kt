@@ -24,24 +24,33 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
@@ -58,6 +67,7 @@ import org.privacyguides.verifiedapps.R
 import org.privacyguides.verifiedapps.data.Hashes
 import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
 import org.privacyguides.verifiedapps.data.InternalDatabaseStatus
+import org.privacyguides.verifiedapps.data.VerificationStatus
 import org.privacyguides.verifiedapps.codeberg.CodebergAppSubmission
 import org.privacyguides.verifiedapps.github.GitHubAppSubmission
 
@@ -77,11 +87,16 @@ fun VerifyAppScreen(
     alwaysShowGitHubSubmit: Boolean,
     showCodebergSubmit: Boolean,
     isSystemApp: Boolean,
+    verificationStatus: VerificationStatus,
+    onVerifyFromClipboard: (String) -> Unit,
+    showClipboardEmptyMessage: () -> Unit,
+    showVerifyFromClipboard: Boolean,
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboard.current
     val coroutineScope = rememberCoroutineScope()
     val verticalScroll = rememberScrollState()
+    var showMoreInfoAboutVerificationStatusDialog by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (hashes.hashes.isEmpty()) {
             onLaunchedEffectHashEmpty()
@@ -365,10 +380,78 @@ fun VerifyAppScreen(
                     }
                 }
             }
+
+            if (showVerifyFromClipboard) {
+                Button(onClick = {
+                    coroutineScope.launch {
+                        val clipboardText = clipboard.getClipEntry()?.clipData
+                            ?.takeIf { it.itemCount > 0 }
+                            ?.getItemAt(0)?.text?.toString()
+                        if (!clipboardText.isNullOrEmpty()) {
+                            onVerifyFromClipboard(clipboardText)
+                        } else {
+                            showClipboardEmptyMessage()
+                        }
+                    }
+                }) {
+                    Text("Verify from clipboard")
+                }
+                Text(
+                    "Verification Status:",
+                )
+                Row {
+                    FilledTonalButton(
+                        onClick = { showMoreInfoAboutVerificationStatusDialog = true },
+                    ) {
+                        Text(
+                            verificationStatus.simpleVerificationStatus.name,
+                            style = MaterialTheme.typography.headlineLarge
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            Icons.Default.Info,
+                            "More info about verification status",
+                            tint = verificationStatus.simpleVerificationStatus.color,
+                        )
+                    }
+                }
+            }
         }
 
             Spacer(Modifier.padding(WindowInsets.navigationBars.asPaddingValues()))
         }
+    }
+
+    if (showMoreInfoAboutVerificationStatusDialog) {
+        AlertDialog(
+            onDismissRequest = { showMoreInfoAboutVerificationStatusDialog = false },
+            confirmButton = {
+                TextButton(
+                    { showMoreInfoAboutVerificationStatusDialog = false }
+                ) {
+                    Text(stringResource(id = android.R.string.ok))
+                }
+            },
+            title = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        verificationStatus.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = verificationStatus.simpleVerificationStatus.color,
+                    )
+                }
+            },
+            text = {
+                LazyColumn {
+                    item {
+                        Text(verificationStatus.info)
+                    }
+                }
+            }
+        )
     }
 }
 
