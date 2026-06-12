@@ -1,18 +1,8 @@
-# Fastlane lanes for the Google Play build of Verified Apps.
-#
-# Package: org.privacyguides.verifiedapps.play (see Appfile). The artifact is an
-# Android App Bundle signed with the dedicated Play upload key; Google's Play
-# App Signing re-signs the distributed APKs. The canonical GitHub APK is built
-# and published separately and never goes through here.
-#
-# Build the bundle first (from the repo root):
+# Fastlane lanes for the Google Play build. Build the bundle first:
 #   ./gradlew :app:bundleRelease -PplayBuild=true
 #
-# Environment:
-#   PLAY_JSON_KEY_FILE   path to the Play service-account JSON (set in Appfile)
-#   PLAY_AAB_PATH        path to the .aab (default: the standard release output)
-#   PLAY_TRACK           Play track (default: internal)
-#   PLAY_RELEASE_STATUS  draft | completed | halted | inProgress (default: draft)
+# Env: PLAY_JSON_KEY_FILE (set in Appfile), PLAY_AAB_PATH, PLAY_TRACK,
+# PLAY_RELEASE_STATUS (draft | completed | halted | inProgress).
 
 default_platform(:android)
 
@@ -24,12 +14,9 @@ platform :android do
     upload_to_play_store(
       track: ENV.fetch("PLAY_TRACK", "internal"),
       aab: ENV.fetch("PLAY_AAB_PATH", AAB_DEFAULT),
-      # Default to a draft so a human confirms rollout in the Play Console; CI
-      # can override to "completed" via PLAY_RELEASE_STATUS.
+      # Draft by default so a human confirms rollout; CI can override.
       release_status: ENV.fetch("PLAY_RELEASE_STATUS", "draft"),
-      # Publish only the binary + release notes from this lane. The store
-      # listing is managed separately (see the `metadata` lane) so a listing
-      # validation error can never block a binary upload.
+      # Binary + release notes only; the listing is the separate `metadata` lane.
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true

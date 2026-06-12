@@ -1,10 +1,6 @@
-# Google Play package for the dedicated Play build. This is intentionally NOT
-# org.privacyguides.verifiedapps: the canonical GitHub build keeps that ID and
-# its own reproducible signing key, while the Play build lives under a distinct
-# package so the two can never collide or be confused.
+# Distinct package so the Play build never collides with the GitHub build,
+# which keeps org.privacyguides.verifiedapps and its own signing key.
 package_name("org.privacyguides.verifiedapps.play")
 
-# Service-account JSON for the Play Developer API. In CI this is written to a
-# temp file from the PLAY_SERVICE_ACCOUNT_JSON secret and its path exported as
-# PLAY_JSON_KEY_FILE. Locally, point PLAY_JSON_KEY_FILE at your own key.
+# Play Developer API service account; PLAY_JSON_KEY_FILE points at the JSON.
 json_key_file(ENV.fetch("PLAY_JSON_KEY_FILE", ""))
