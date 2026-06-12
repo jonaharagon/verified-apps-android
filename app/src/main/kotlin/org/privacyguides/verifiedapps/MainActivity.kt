@@ -23,6 +23,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.privacyguides.verifiedapps.preferences.PreferencesViewModel
 import org.privacyguides.verifiedapps.ui.VerifyAppViewModel
 import org.privacyguides.verifiedapps.ui.theme.AppVerifierTheme
@@ -30,6 +31,22 @@ import org.privacyguides.verifiedapps.ui.theme.AppVerifierTheme
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "preferences")
 
 class MainActivity : ComponentActivity() {
+
+    /**
+     * APK URIs from SEND/VIEW intents delivered to the already-running activity
+     * (launchMode="singleTop" routes them to [onNewIntent] instead of a new instance).
+     * Buffered so a URI emitted just before the UI starts collecting is not dropped.
+     */
+    private val newApkUris = MutableSharedFlow<Uri>(extraBufferCapacity = 1)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Keep the activity's intent current so recreation (e.g. rotation) restores
+        // this verification's context rather than the original launch intent's.
+        setIntent(intent)
+        intent.incomingApkUri()?.let(newApkUris::tryEmit)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -41,26 +58,20 @@ class MainActivity : ComponentActivity() {
                 factory = PreferencesViewModel.PreferencesViewModelFactory(dataStore)
             )
 
-            val isActionSend =
-                (intent.action == Intent.ACTION_SEND)
+            // Freeze the launch action at first composition: it selects the NavHost
+            // start destination, which must stay stable across recompositions even
+            // after onNewIntent calls setIntent. Later SEND/VIEW intents reach the
+            // UI through newApkUris instead.
+            val launchAction = rememberSaveable { intent.action ?: "" }
+            val isActionSend = (launchAction == Intent.ACTION_SEND)
+            val isActionView = (launchAction == Intent.ACTION_VIEW)
 
-            val isActionView =
-                (intent.action == Intent.ACTION_VIEW)
-
-            // Process the incoming APK only once now.
+            // Process the launch intent's APK only once now.
             var intentHandled by rememberSaveable { mutableStateOf(false) }
             LaunchedEffect(Unit) {
                 if (!intentHandled) {
                     intentHandled = true
-                    val apkUri: Uri? = when {
-                        isActionSend -> IntentCompat.getParcelableExtra(
-                            intent,
-                            Intent.EXTRA_STREAM,
-                            Uri::class.java,
-                        )
-                        isActionView -> intent.data
-                        else -> null
-                    }
+                    val apkUri: Uri? = intent.incomingApkUri()
                     if (apkUri != null) {
                         verifyAppViewModel.setApkVerificationInfoAndInternalDatabaseStatusFromUri(
                             contentResolver,
@@ -90,9 +101,17 @@ class MainActivity : ComponentActivity() {
                         preferencesViewModel = preferencesViewModel,
                         isActionSend = isActionSend,
                         isActionView = isActionView,
+                        newApkUris = newApkUris,
                     )
                 }
             }
         }
     }
+}
+
+/** The APK URI carried by a SEND/VIEW intent, or null for any other intent. */
+private fun Intent.incomingApkUri(): Uri? = when (action) {
+    Intent.ACTION_SEND -> IntentCompat.getParcelableExtra(this, Intent.EXTRA_STREAM, Uri::class.java)
+    Intent.ACTION_VIEW -> data
+    else -> null
 }

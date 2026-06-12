@@ -5,12 +5,23 @@
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
+
+    <!-- This app must never have network access: not requesting INTERNET makes the
+         kernel refuse socket creation for our UID entirely. tools:node="remove"
+         additionally strips the permission if any library manifest ever tries to
+         merge it in, so gaining network access always requires a deliberate,
+         reviewable change to this file. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+
     <application
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:memtagMode="async"
+        android:memtagMode="sync"
+        android:taskAffinity=""
         android:theme="@style/Theme.VerifiedApps">
         <activity
             android:name=".MainActivity"

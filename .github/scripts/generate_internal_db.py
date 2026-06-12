@@ -48,7 +48,21 @@ S20 = "                    "
 
 
 def kotlin_string_escape(value: str) -> str:
-    return value.replace("\\", "\\\\").replace('"', '\\"')
+    """Escape a value for a double-quoted Kotlin string literal.
+
+    `$` must be escaped because Kotlin evaluates `${...}` string templates: an
+    unescaped dollar would let data.yml content inject expressions into the
+    generated source. Newlines/tabs are escaped so a multi-line value cannot
+    break out of the literal.
+    """
+    return (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("$", "\\$")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+    )
 
 
 def validate_package(package: str) -> None:
@@ -132,8 +146,7 @@ def enum_entries_for_kotlin(display_to_enum: dict[str, str]) -> list[tuple[str, 
 def format_source_enum(display_to_enum: dict[str, str]) -> str:
     lines = ['enum class Source(val displayName: String) {', '    NONE("NONE"), // DO NOT USE IN DATABASE ENTRIES.']
     for enum_val, display in enum_entries_for_kotlin(display_to_enum):
-        escaped = display.replace("\\", "\\\\").replace('"', '\\"')
-        lines.append(f'    {enum_val}("{escaped}"),')
+        lines.append(f'    {enum_val}("{kotlin_string_escape(display)}"),')
     lines.append("}")
     return "\n".join(lines)
 
@@ -179,8 +192,11 @@ def format_entry(package: str, signatures: list, display_to_enum: dict[str, str]
         if not raw_fingerprint:
             continue
 
+        # Canonicalize to upper-case hex: fingerprints are case-insensitive, and the
+        # app compares them against its own upper-case SHA-256 output, so emitting a
+        # consistent case keeps a lower-case source entry from causing a false mismatch.
         fingerprints = [
-            line.strip()
+            line.strip().upper()
             for line in raw_fingerprint.splitlines()
             if line.strip()
         ]

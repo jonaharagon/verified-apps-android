@@ -23,13 +23,25 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.security.MessageDigest
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 
 class VerifyAppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(VerifyAppUiState())
     val uiState: StateFlow<VerifyAppUiState> = _uiState.asStateFlow()
+
+    /**
+     * Identifies the most recently requested verification. APK parses run
+     * asynchronously and a new verification can be requested while one is still in
+     * flight (e.g. a second APK shared to the running activity), so each parse
+     * applies its result only if it is still the latest request — a slow, superseded
+     * parse must never overwrite a newer verdict with an older APK's.
+     */
+    private val verificationGeneration = AtomicLong(0)
 
     fun setAppVerificationInfo(
         name: String,
@@ -38,6 +50,9 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
         internalDatabaseInfo: InternalDatabaseInfo,
         isSystemApp: Boolean = false,
     ) {
+        // This synchronous verification (e.g. selecting an app from the list)
+        // supersedes any APK parse still in flight.
+        verificationGeneration.incrementAndGet()
         _uiState.update {
             it.copy(
                 name = name,
@@ -89,6 +104,11 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
         uri: Uri,
         packageManager: PackageManager,
     ) {
+        // Clear the previous verdict before anything else: a second APK can arrive
+        // while the screen still shows the last APK's result, and that stale verdict
+        // must never be readable as the new APK's.
+        val generation = verificationGeneration.incrementAndGet()
+        _uiState.value = VerifyAppUiState()
         // Copying and parsing an APK (potentially hundreds of MB) must never run on
         // the main thread. State updates flow back through StateFlow, which Compose
         // collects on the main thread.
@@ -99,12 +119,16 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
                 "pending-verification-${UUID.randomUUID()}.apk"
             )
             try {
+                // The URI comes from another app via the exported SEND/VIEW intents, so
+                // the stream behind it is untrusted: copy it with a hard size ceiling so a
+                // malicious or unbounded content provider cannot fill the device's storage.
                 val copied = contentResolver.openInputStream(uri)?.use { input ->
-                    tempFile.outputStream().use { output -> input.copyTo(output) }
-                    true
+                    tempFile.outputStream().use { output ->
+                        input.copyBounded(output, MAX_APK_BYTES)
+                    }
                 } ?: false
                 if (!copied) {
-                    setApkFailedToParse(true)
+                    ifCurrentVerification(generation) { setApkFailedToParse(true) }
                     return@launch
                 }
 
@@ -114,7 +138,7 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
                 )
                 // No signing info means we cannot produce fingerprints to compare.
                 if (packageInfo?.signingInfo == null) {
-                    setApkFailedToParse(true)
+                    ifCurrentVerification(generation) { setApkFailedToParse(true) }
                     return@launch
                 }
 
@@ -125,20 +149,52 @@ class VerifyAppViewModel(application: Application) : AndroidViewModel(applicatio
                 val packageName = packageInfo.packageName
                 val hashes = getHashesFromPackageInfo(packageInfo)
 
-                setAppVerificationInfo(
-                    packageManager.getApplicationLabel(applicationInfo).toString(),
-                    packageName,
-                    hashes,
-                    getInternalDatabaseInfoFromVerificationInfo(VerificationInfo(packageName, hashes)),
-                    isSystemApp = packageManager.isInstalledSystemPackage(packageName),
-                )
-                setAppIcon(packageManager.getApplicationIcon(applicationInfo))
+                ifCurrentVerification(generation) {
+                    setAppVerificationInfo(
+                        packageManager.getApplicationLabel(applicationInfo).toString(),
+                        packageName,
+                        hashes,
+                        getInternalDatabaseInfoFromVerificationInfo(VerificationInfo(packageName, hashes)),
+                        isSystemApp = packageManager.isInstalledSystemPackage(packageName),
+                    )
+                    setAppIcon(packageManager.getApplicationIcon(applicationInfo))
+                }
             } catch (_: IOException) {
-                setApkFailedToParse(true)
+                ifCurrentVerification(generation) { setApkFailedToParse(true) }
             } finally {
                 tempFile.delete()
             }
         }
+    }
+
+    /** Run [block] only if [generation] is still the most recently requested verification. */
+    private inline fun ifCurrentVerification(generation: Long, block: () -> Unit) {
+        if (verificationGeneration.get() == generation) {
+            block()
+        }
+    }
+}
+
+/**
+ * Upper bound on the bytes copied from an incoming APK URI. Comfortably larger than any
+ * real monolithic APK a user would verify, but finite so an unbounded/hostile stream from
+ * another app cannot exhaust storage. Exceeding it is surfaced as a parse failure.
+ */
+private const val MAX_APK_BYTES = 4L * 1024 * 1024 * 1024 // 4 GiB
+
+/**
+ * Copy this stream to [output], stopping and returning false if more than [maxBytes] would
+ * be written. Returns true once the source is fully copied within the limit.
+ */
+private fun InputStream.copyBounded(output: OutputStream, maxBytes: Long): Boolean {
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    var total = 0L
+    while (true) {
+        val read = read(buffer)
+        if (read < 0) return true
+        total += read
+        if (total > maxBytes) return false
+        output.write(buffer, 0, read)
     }
 }
 

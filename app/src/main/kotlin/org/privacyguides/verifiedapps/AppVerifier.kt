@@ -1,6 +1,7 @@
 package org.privacyguides.verifiedapps
 
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -29,6 +30,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,6 +51,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.privacyguides.verifiedapps.data.Hashes
 import org.privacyguides.verifiedapps.data.InternalDatabaseInfo
@@ -80,6 +83,7 @@ fun AppVerifierApp(
     preferencesViewModel: PreferencesViewModel,
     isActionSend: Boolean,
     isActionView: Boolean,
+    newApkUris: Flow<Uri>,
 ) {
     val preferencesUiState = preferencesViewModel.uiState.collectAsState()
 
@@ -110,6 +114,22 @@ fun AppVerifierApp(
                 navController.navigate(AppVerifierScreens.VerifyApp.name)
             }
         }
+
+    // APKs handed to the already-running activity (onNewIntent) must replace the
+    // verdict still on screen: re-trigger verification and bring the verify screen
+    // forward, otherwise the previous APK's result would be shown for the new APK.
+    LaunchedEffect(Unit) {
+        newApkUris.collect { uri ->
+            verifyAppViewModel.setApkVerificationInfoAndInternalDatabaseStatusFromUri(
+                context.contentResolver,
+                uri,
+                context.packageManager,
+            )
+            navController.navigate(AppVerifierScreens.VerifyApp.name) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var appListSearchActive by rememberSaveable { mutableStateOf(false) }
